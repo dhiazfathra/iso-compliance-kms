@@ -80,8 +80,12 @@ src/
   app/(payload)/      Payload admin panel and REST/GraphQL routes
   collections/        Payload collection configs (the domain model)
   components/         shared UI: sidebar, clause tree, chips, preview
+  lib/access.ts       role ranking and every collection's access rules
+  lib/auth.ts         session lookup, audit-session expiry, login guard
+  lib/audit-session.ts  view and download bookkeeping for auditor sessions
   lib/data.ts         loads and assembles the whole compliance graph
   lib/format.ts       dates, due-date colour ramp, status metadata
+  migrations/         checked-in schema migrations
   seed/               dataset transcribed from the Claude Design mockup
 ```
 
@@ -99,6 +103,9 @@ Decisions are recorded in [`docs/decisions/`](docs/decisions):
 - [0005](docs/decisions/0005-version-history-as-array-fields.md) — version history as array fields
 - [0006](docs/decisions/0006-whole-graph-load.md) — whole-graph load per request
 - [0007](docs/decisions/0007-seed-generates-valid-files.md) — seed generates valid placeholder files
+- [0008](docs/decisions/0008-authentication-and-role-model.md) — authentication and the role model
+- [0009](docs/decisions/0009-external-auditor-sessions.md) — time-boxed external-auditor sessions
+- [0010](docs/decisions/0010-evidence-bytes-served-through-the-app.md) — evidence bytes served through the app
 
 ## Deploying to Vercel
 
@@ -110,6 +117,28 @@ Decisions are recorded in [`docs/decisions/`](docs/decisions):
    config (see [ADR-0002](docs/decisions/0002-turso-libsql-database.md)).
 4. Run `bun run seed` against the production database only if you want the
    sample dataset there — it deletes existing compliance records first.
+
+### Deployed
+
+Production: **https://iso-compliance-kms.vercel.app** (Vercel, region `hnd1`;
+Turso in `aws-ap-northeast-1`; Vercel Blob for evidence).
+
+The function region is pinned in `vercel.json` because it has to be: `loadGraph`
+issues seven queries per request (ADR-0006) and Turso speaks HTTP, so a function
+in `iad1` reading a database in Tokyo paid the round trip seven times. Measured
+warm, five samples per route, from Jakarta:
+
+| Route            | Before (`iad1`) | After (`hnd1`) |
+| ---------------- | --------------- | -------------- |
+| `/`              | 1.58 – 2.75 s   | 0.32 – 0.63 s  |
+| `/clauses`       | 1.49 – 1.72 s   | 0.37 – 0.55 s  |
+| `/matrix`        | 1.81 – 1.92 s   | 0.44 – 0.57 s  |
+| `/evidence`      | 1.50 – 1.93 s   | 0.30 – 0.33 s  |
+| `/audit-session` | 1.54 – 1.73 s   | 0.28 – 0.39 s  |
+
+Co-locating the function was the whole fix; `loadGraph` was left alone, since
+its seven queries already run in parallel and the cost was latency per round
+trip, not query count.
 
 ## Known limits
 

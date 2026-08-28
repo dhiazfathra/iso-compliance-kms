@@ -33,10 +33,14 @@ export function EvidencePreview({ item }: { item: EvidenceItem }) {
     )
   }
 
+  // Previews read through the gated route, never the storage URL: a Vercel Blob
+  // URL is public to anyone holding it (ADR-0010).
+  const src = `/evidence/${item.id}/download?inline=1`
+
   if (item.fileType === 'PDF') {
     return (
       <iframe
-        src={item.url}
+        src={src}
         title={item.title}
         style={{ ...frame, width: '100%', border: '1px solid var(--line)' }}
       />
@@ -48,7 +52,7 @@ export function EvidencePreview({ item }: { item: EvidenceItem }) {
       <div style={frame}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={item.url}
+          src={src}
           alt={item.title}
           style={{ maxWidth: '100%', maxHeight: 400, objectFit: 'contain' }}
         />

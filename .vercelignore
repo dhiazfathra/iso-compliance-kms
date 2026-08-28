@@ -1,0 +1,17 @@
+# Local-only files. .env in particular must never reach the build: it points
+# DATABASE_URI at the local SQLite file and would shadow the project's
+# environment variables.
+.env
+.env.*
+*.db
+.next
+node_modules
+.claude
+.serena
+.procoder
+.swarm
+.claude-flow
+.tokensave
+.design
+.agents
+.codex

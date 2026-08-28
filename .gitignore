@@ -67,3 +67,4 @@ node_modules/
 .procoder/state/
 .claude/settings.local.json
 ruvector.db
+.env*

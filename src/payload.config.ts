@@ -38,6 +38,16 @@ export default buildConfig({
   }),
   sharp: undefined,
   plugins: blobToken
-    ? [vercelBlobStorage({ enabled: true, collections: { evidence: true }, token: blobToken })]
+    ? [
+        vercelBlobStorage({
+          enabled: true,
+          collections: { evidence: true },
+          token: blobToken,
+          // Blob URLs are public to whoever holds them and the plugin supports
+          // no other access level, so the object name is made unguessable and
+          // the app serves the bytes itself (ADR-0010).
+          addRandomSuffix: true,
+        }),
+      ]
     : [],
 })

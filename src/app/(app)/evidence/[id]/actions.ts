@@ -5,6 +5,7 @@ import config from '@payload-config'
 import { revalidatePath } from 'next/cache'
 import { requireUser } from '@/lib/auth'
 import { hasLevel } from '@/lib/access'
+import { prependRevision } from '@/lib/evidence-version'
 
 /**
  * Uploading a new version replaces the stored file and appends to the record's
@@ -33,8 +34,11 @@ export async function uploadNewVersion(formData: FormData) {
     overrideAccess: false,
     user,
   })
-  const revisions = Array.isArray(current.revisions) ? current.revisions : []
-  const nextNumber = revisions.length + 1
+  const revisions = prependRevision(current.revisions, {
+    note,
+    authorId: user.id,
+    at: new Date(),
+  })
 
   const data = Buffer.from(await file.arrayBuffer())
 
@@ -43,18 +47,7 @@ export async function uploadNewVersion(formData: FormData) {
     id,
     overrideAccess: false,
     user,
-    data: {
-      uploadedAt: new Date().toISOString(),
-      revisions: [
-        {
-          version: `v${nextNumber}`,
-          date: new Date().toISOString(),
-          author: user.id,
-          note: note || 'New version uploaded.',
-        },
-        ...revisions,
-      ],
-    },
+    data: { uploadedAt: new Date().toISOString(), revisions },
     file: { data, mimetype: file.type, name: file.name, size: data.length },
   })
 
