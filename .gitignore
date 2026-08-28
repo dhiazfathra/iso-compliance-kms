@@ -57,3 +57,13 @@ node_modules/
 .env.local
 .vercel
 .design/
+
+# local agent/editor state
+.DS_Store
+.serena/
+.swarm/
+.claude-flow/
+.tokensave/
+.procoder/state/
+.claude/settings.local.json
+ruvector.db
