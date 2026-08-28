@@ -76,7 +76,7 @@ export function EvidencePreview({ item }: { item: EvidenceItem }) {
       <span className="mono" style={{ fontSize: 11, color: 'var(--muted)' }}>
         {OFFICE_HINT[item.fileType] ?? 'Binary record'}
       </span>
-      <a href={item.url} className="mono" style={{ fontSize: 11.5 }} download>
+      <a href={`/evidence/${item.id}/download`} className="mono" style={{ fontSize: 11.5 }}>
         Download to view
       </a>
     </div>

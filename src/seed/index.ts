@@ -5,6 +5,9 @@ import { placeholderFile } from './placeholder'
 
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || 'admin@dermaster.local'
 const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || 'changeme123'
+const AUDITOR_EMAIL = process.env.SEED_AUDITOR_EMAIL || 'k.halim@external.audit'
+/** How long the seeded external-auditor session stays live, in hours. */
+const AUDITOR_SESSION_HOURS = Number(process.env.SEED_AUDITOR_SESSION_HOURS || 8)
 
 /** '9001 7.5.1' and 'A.6.3' both appear as cross references in the mockup. */
 function bareClauseId(ref: string): string {
@@ -24,6 +27,7 @@ const run = async () => {
 
   // Wipe in dependency order so the seed is repeatable.
   for (const collection of [
+    'audit-sessions',
     'activity',
     'gaps',
     'evidence',
@@ -220,6 +224,38 @@ const run = async () => {
       },
     })
   }
+
+  // External auditor: a read-only user, and the time-boxed session that scopes
+  // them. SESSION-0094 is the one the mockup shows (ADR-0009).
+  const auditors = await payload.find({
+    collection: 'users',
+    where: { email: { equals: AUDITOR_EMAIL } },
+  })
+  const auditor =
+    auditors.docs[0] ??
+    (await payload.create({
+      collection: 'users',
+      data: {
+        name: 'K. Halim',
+        role: 'External auditor',
+        email: AUDITOR_EMAIL,
+        password: ADMIN_PASSWORD,
+        access: 'read',
+      },
+    }))
+  const startedAt = new Date()
+  await payload.create({
+    collection: 'audit-sessions',
+    data: {
+      sessionId: 'SESSION-0094',
+      label: 'External · K. Halim',
+      auditor: auditor.id,
+      startedAt: startedAt.toISOString(),
+      expiresAt: new Date(startedAt.getTime() + AUDITOR_SESSION_HOURS * 3600_000).toISOString(),
+      revoked: false,
+      downloads: 0,
+    },
+  })
 
   const base = new Date()
   for (const [i, a] of ACTIVITY.entries()) {

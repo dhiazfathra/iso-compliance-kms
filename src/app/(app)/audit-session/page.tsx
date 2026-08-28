@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { crossMapOf, evidenceCount, loadGraph } from '@/lib/data'
-import { STATUS_META, dueColor, fmtDate, type StatusKey } from '@/lib/format'
+import { STATUS_META, dueColor, expiresIn, fmtDate, type StatusKey } from '@/lib/format'
 import { CrossMapChips } from '@/components/Badges'
+import { sessionState } from '@/lib/auth'
+import { recordClauseView } from '@/lib/audit-session'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,6 +20,10 @@ export default async function AuditSessionPage({
   const graph = await loadGraph()
   const current = graph.clauses.find((c) => c.clauseId === clause) ?? graph.clauses[0]
   if (!current) return <div className="block">No requirements loaded.</div>
+
+  // The banner below promises the trail; this is where the promise is kept.
+  const { session } = await sessionState()
+  const viewed = session ? await recordClauseView(session, current.clauseId) : 0
 
   const status = STATUS_META[current.status as StatusKey] ?? STATUS_META.progress
   const chain = current.policies.flatMap((p) => [
@@ -64,10 +70,14 @@ export default async function AuditSessionPage({
           className="mono"
           style={{ fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase' }}
         >
-          Audit session · presenting
+          {session ? `${session.sessionId} · ${session.label}` : 'Audit session · presenting'}
         </span>
         <span className="mono" style={{ fontSize: 11, opacity: 0.7 }}>
-          read-only mirror · every view is written to the audit trail
+          {session
+            ? `${viewed} clause${viewed === 1 ? '' : 's'} viewed · ${session.downloads ?? 0} download${
+                (session.downloads ?? 0) === 1 ? '' : 's'
+              } · expires in ${expiresIn(session.expiresAt)}`
+            : 'read-only mirror · every view is written to the audit trail'}
         </span>
       </div>
 

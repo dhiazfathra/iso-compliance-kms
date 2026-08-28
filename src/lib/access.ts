@@ -21,7 +21,35 @@ export const hasLevel = (user: MaybeUser, min: AccessLevel): boolean => {
   return !!rank && rank >= RANK[min]
 }
 
-export const signedIn: Access = ({ req }) => hasLevel(req.user, 'read')
+/**
+ * Whether a read-only user's external-auditor session is still open. Staff have
+ * no session row and are unaffected. This runs inside `access`, not only in the
+ * app, so an expired auditor is refused by the REST and GraphQL APIs too — the
+ * Payload cookie outlives the session and must not outlive the permission.
+ */
+export const auditSessionOpen = async (req: {
+  user?: MaybeUser & { id?: number | string }
+  payload?: {
+    find: (
+      args: Record<string, unknown>,
+    ) => Promise<{ docs: { revoked?: boolean | null; expiresAt: string }[] }>
+  }
+}): Promise<boolean> => {
+  if (req.user?.access !== 'read' || !req.payload) return true
+  const found = await req.payload.find({
+    collection: 'audit-sessions',
+    where: { auditor: { equals: req.user.id } },
+    sort: '-startedAt',
+    limit: 1,
+    depth: 0,
+    overrideAccess: true,
+  })
+  const session = found.docs[0]
+  return !session || (!session.revoked && new Date(session.expiresAt).getTime() > Date.now())
+}
+
+export const signedIn: Access = async ({ req }) =>
+  hasLevel(req.user, 'read') && (await auditSessionOpen(req as never))
 export const canWrite: Access = ({ req }) => hasLevel(req.user, 'write')
 export const adminOnly: Access = ({ req }) => hasLevel(req.user, 'admin')
 

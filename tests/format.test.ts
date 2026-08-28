@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test'
-import { daysUntil, dueColor, fmtDate, relDue } from '../src/lib/format'
+import { describe, expect, it, test } from 'bun:test'
+import { daysUntil, dueColor, expiresIn, fmtDate, relDue } from '../src/lib/format'
 
 const NOW = new Date('2026-08-28T00:00:00Z')
 
@@ -42,5 +42,16 @@ describe('fmtDate', () => {
     expect(fmtDate('2026-09-30')).toBe('30 Sep 26')
     expect(fmtDate('2026-01-05T22:00:00Z')).toBe('05 Jan 26')
     expect(fmtDate(null)).toBe('—')
+  })
+})
+
+describe('expiresIn', () => {
+  const now = new Date('2026-08-28T12:00:00.000Z')
+  it('reads in minutes under an hour and hours above it', () => {
+    expect(expiresIn('2026-08-28T12:45:00.000Z', now)).toBe('45 min')
+    expect(expiresIn('2026-08-28T20:00:00.000Z', now)).toBe('8 h')
+  })
+  it('never goes negative', () => {
+    expect(expiresIn('2026-08-27T00:00:00.000Z', now)).toBe('0 min')
   })
 })

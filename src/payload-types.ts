@@ -74,6 +74,7 @@ export interface Config {
     evidence: Evidence
     gaps: Gap
     activity: Activity
+    'audit-sessions': AuditSession
     'payload-kv': PayloadKv
     'payload-locked-documents': PayloadLockedDocument
     'payload-preferences': PayloadPreference
@@ -88,6 +89,7 @@ export interface Config {
     evidence: EvidenceSelect<false> | EvidenceSelect<true>
     gaps: GapsSelect<false> | GapsSelect<true>
     activity: ActivitySelect<false> | ActivitySelect<true>
+    'audit-sessions': AuditSessionsSelect<false> | AuditSessionsSelect<true>
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>
     'payload-locked-documents':
       PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>
@@ -316,6 +318,47 @@ export interface Activity {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-sessions".
+ */
+export interface AuditSession {
+  id: number
+  /**
+   * e.g. SESSION-0094
+   */
+  sessionId: string
+  /**
+   * Shown in the banner, e.g. "External · K. Halim"
+   */
+  label: string
+  /**
+   * The read-only user this session belongs to
+   */
+  auditor: number | User
+  startedAt: string
+  /**
+   * After this instant the auditor is signed out
+   */
+  expiresAt: string
+  revoked?: boolean | null
+  /**
+   * Distinct requirements opened during the session
+   */
+  clausesViewed?:
+    | {
+        clauseId: string
+        at: string
+        id?: string | null
+      }[]
+    | null
+  /**
+   * Evidence files downloaded during the session
+   */
+  downloads?: number | null
+  updatedAt: string
+  createdAt: string
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -365,6 +408,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'activity'
         value: number | Activity
+      } | null)
+    | ({
+        relationTo: 'audit-sessions'
+        value: number | AuditSession
       } | null)
   globalSlug?: string | null
   user: {
@@ -552,6 +599,28 @@ export interface ActivitySelect<T extends boolean = true> {
   actor?: T
   action?: T
   ref?: T
+  updatedAt?: T
+  createdAt?: T
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-sessions_select".
+ */
+export interface AuditSessionsSelect<T extends boolean = true> {
+  sessionId?: T
+  label?: T
+  auditor?: T
+  startedAt?: T
+  expiresAt?: T
+  revoked?: T
+  clausesViewed?:
+    | T
+    | {
+        clauseId?: T
+        at?: T
+        id?: T
+      }
+  downloads?: T
   updatedAt?: T
   createdAt?: T
 }

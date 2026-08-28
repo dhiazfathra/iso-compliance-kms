@@ -35,9 +35,9 @@ describe('hasLevel', () => {
 })
 
 describe('collection access rules', () => {
-  it('lets any signed-in role read and nobody anonymous', () => {
-    expect(signedIn(req('read'))).toBe(true)
-    expect(signedIn(req())).toBe(false)
+  it('lets any signed-in role read and nobody anonymous', async () => {
+    expect(await signedIn(req('read'))).toBe(true)
+    expect(await signedIn(req())).toBe(false)
   })
 
   it('gates writes on write, deletes on admin', () => {
@@ -47,8 +47,8 @@ describe('collection access rules', () => {
     expect(adminOnly(req('admin'))).toBe(true)
   })
 
-  it('gives a read-only auditor no mutation of compliance data', () => {
-    expect(complianceAccess.read(req('read'))).toBe(true)
+  it('gives a read-only auditor no mutation of compliance data', async () => {
+    expect(await complianceAccess.read(req('read'))).toBe(true)
     expect(complianceAccess.create(req('read'))).toBe(false)
     expect(complianceAccess.update(req('read'))).toBe(false)
     expect(complianceAccess.delete(req('read'))).toBe(false)

@@ -89,7 +89,7 @@ export default async function EvidenceDetailPage({ params }: { params: Promise<{
         </div>
         <div style={{ display: 'flex', gap: 10, flex: 'none', alignItems: 'flex-start' }}>
           {item.url && (
-            <a href={item.url} className="btn btn-ghost" download>
+            <a href={`/evidence/${item.id}/download`} className="btn btn-ghost">
               Download
             </a>
           )}

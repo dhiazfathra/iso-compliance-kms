@@ -62,7 +62,7 @@ carry metadata but no stored file, and the preview panel says so.
 | `/gaps`                       | Open findings, remediation tasks, owners, progress and due dates                                               |
 | `/owners`                     | Requirement mix per accountable owner                                                                          |
 | `/audit-pack`                 | What an export for the certification body would contain                                                        |
-| `/audit-session`              | Read-only presenting mode: one requirement, large type, whole chain of evidence                                |
+| `/audit-session`              | Read-only presenting mode: one requirement, large type, whole chain of evidence, live session counters         |
 | `/admin`                      | Payload admin for maintaining the data                                                                         |
 
 Expiry and review dates use one colour ramp across every screen (due within 30

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { currentUser } from '@/lib/auth'
+import { sessionState } from '@/lib/auth'
 import { LoginForm } from '@/components/LoginForm'
 
 export const dynamic = 'force-dynamic'
@@ -10,7 +10,10 @@ export default async function LoginPage({
   searchParams: Promise<{ expired?: string; next?: string }>
 }) {
   const { expired, next } = await searchParams
-  if (await currentUser()) redirect(next || '/')
+  // A user whose audit session has expired still holds a valid cookie; they
+  // belong on this page, not bounced back into the app.
+  const { user, live } = await sessionState()
+  if (user && live) redirect(next || '/')
 
   return (
     <div

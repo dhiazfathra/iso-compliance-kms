@@ -60,3 +60,12 @@ export function relDue(d?: string | null, now?: Date): string {
   if (n === null) return ''
   return n < 0 ? `${Math.abs(n)}d overdue` : `in ${n}d`
 }
+
+/**
+ * "expires in 45 min" / "expires in 8 h" for an audit session banner. `now` is
+ * a parameter so the clock stays out of the render (and out of the tests).
+ */
+export function expiresIn(iso: string, now: Date = new Date()): string {
+  const minutes = Math.max(0, Math.round((new Date(iso).getTime() - now.getTime()) / 60_000))
+  return minutes < 60 ? `${minutes} min` : `${Math.round(minutes / 60)} h`
+}
