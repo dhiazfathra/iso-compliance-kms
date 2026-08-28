@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { loadGraph } from '@/lib/data'
-import { daysUntil, dueColor, fmtDate, relDue } from '@/lib/format'
+import { gapStats, loadGraph } from '@/lib/data'
+import { dueColor, fmtDate, relDue } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,8 +28,7 @@ function Stat({ n, label, tone }: { n: string | number; label: string; tone?: st
 export default async function GapsPage() {
   const graph = await loadGraph()
   const gaps = graph.gaps
-  const ages = gaps.map((g) => Math.abs(daysUntil(g.due) ?? 0)).sort((a, b) => a - b)
-  const median = ages.length ? ages[Math.floor(ages.length / 2)] : 0
+  const stats = gapStats(gaps)
 
   return (
     <div className="block">
@@ -37,17 +36,10 @@ export default async function GapsPage() {
         className="stack-mobile"
         style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0,1fr))', gap: 26 }}
       >
-        <Stat n={gaps.length} label="Open gaps" />
-        <Stat
-          n={gaps.filter((g) => g.blocking).length}
-          label="Blocking certification"
-          tone="var(--warn)"
-        />
-        <Stat
-          n={Math.round(gaps.reduce((n, g) => n + g.progress, 0) / (gaps.length || 1))}
-          label="Mean progress %"
-        />
-        <Stat n={median} label="Median days to due" />
+        <Stat n={stats.open} label="Open gaps" />
+        <Stat n={stats.blocking} label="Blocking certification" tone="var(--warn)" />
+        <Stat n={stats.meanProgress} label="Mean progress %" />
+        <Stat n={stats.medianAge} label="Median days to due" />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>

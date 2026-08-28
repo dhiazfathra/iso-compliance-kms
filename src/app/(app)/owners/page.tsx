@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { loadGraph } from '@/lib/data'
-import { daysUntil } from '@/lib/format'
+import { loadGraph, ownerLoad, SOON_DAYS } from '@/lib/data'
+import { STATUS_META } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,28 +9,7 @@ const COLS = 'minmax(0,1fr) 190px 88px 96px 104px 104px'
 export default async function OwnersPage() {
   const graph = await loadGraph()
 
-  const rows = graph.users
-    .map((u) => {
-      const owned = graph.clauses.filter((c) => c.owner.id === u.id)
-      const evidence = graph.evidence.filter((e) => e.uploader.id === u.id).length
-      const due = graph.clauses.filter((c) => {
-        if (c.owner.id !== u.id) return false
-        const d = daysUntil(c.nextReview)
-        return d !== null && d <= 30
-      }).length
-      return {
-        user: u,
-        total: owned.length,
-        gap: owned.filter((c) => c.status === 'gap').length,
-        review: owned.filter((c) => c.status === 'review').length,
-        compliant: owned.filter((c) => c.status === 'compliant').length,
-        progress: owned.filter((c) => c.status === 'progress').length,
-        evidence,
-        due,
-      }
-    })
-    .filter((r) => r.total)
-    .sort((a, b) => b.total - a.total)
+  const rows = ownerLoad(graph)
 
   return (
     <div className="block">
@@ -49,7 +28,7 @@ export default async function OwnersPage() {
           <span style={{ textAlign: 'right' }}>Owned</span>
           <span style={{ textAlign: 'right' }}>Gaps</span>
           <span style={{ textAlign: 'right' }}>Needs review</span>
-          <span style={{ textAlign: 'right' }}>Due ≤30d</span>
+          <span style={{ textAlign: 'right' }}>Due ≤{SOON_DAYS}d</span>
         </div>
         {rows.map((r) => (
           <Link
@@ -72,15 +51,11 @@ export default async function OwnersPage() {
               </span>
             </span>
             <span style={{ display: 'flex', height: 6, gap: 1 }}>
-              {[
-                [r.compliant, '#21201c'],
-                [r.progress, '#0073e6'],
-                [r.review, 'rgba(168,86,42,.45)'],
-                [r.gap, '#a8562a'],
-              ]
-                .filter(([n]) => n)
-                .map(([n, bg], i) => (
-                  <span key={i} style={{ flex: n as number, background: bg as string }} />
+              {(['compliant', 'progress', 'review', 'gap'] as const)
+                .map((s) => ({ s, n: r[s] }))
+                .filter(({ n }) => n)
+                .map(({ s, n }) => (
+                  <span key={s} style={{ flex: n, background: STATUS_META[s].bar }} />
                 ))}
             </span>
             <span className="mono" style={{ fontSize: 12, textAlign: 'right' }}>

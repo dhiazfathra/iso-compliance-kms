@@ -1,23 +1,44 @@
+/**
+ * One table for how a requirement status is drawn anywhere in the app.
+ *
+ * `color`/`bg`/`border` style a chip; `ink` is the same status written as text
+ * on the page background (a gap chip is white on rust, which is unreadable as
+ * a bare number); `bar` is the solid fill used in the split bars. Callers read
+ * a field — they never re-derive one from another.
+ */
 export const STATUS_META = {
   compliant: {
     label: 'Compliant',
     color: '#21201c',
+    ink: '#21201c',
+    bar: '#21201c',
     bg: 'transparent',
     border: 'rgba(33,32,28,0.28)',
   },
   progress: {
     label: 'In progress',
     color: '#0073e6',
+    ink: '#0073e6',
+    bar: '#0073e6',
     bg: 'transparent',
     border: 'rgba(0,115,230,0.35)',
   },
   review: {
     label: 'Needs review',
     color: '#a8562a',
+    ink: '#a8562a',
+    bar: 'rgba(168,86,42,.45)',
     bg: 'transparent',
     border: 'rgba(168,86,42,0.34)',
   },
-  gap: { label: 'Gap', color: '#fdfdfc', bg: '#a8562a', border: '#a8562a' },
+  gap: {
+    label: 'Gap',
+    color: '#fdfdfc',
+    ink: 'var(--warn)',
+    bar: '#a8562a',
+    bg: '#a8562a',
+    border: '#a8562a',
+  },
 } as const
 
 export type StatusKey = keyof typeof STATUS_META

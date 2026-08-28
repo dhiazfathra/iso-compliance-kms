@@ -1,23 +1,12 @@
-import { loadGraph } from '@/lib/data'
+import { crossMapMatrix, loadGraph } from '@/lib/data'
 
 export const dynamic = 'force-dynamic'
 
 export default async function MatrixPage() {
   const graph = await loadGraph()
 
-  // Only requirements that an artefact actually points at become columns:
-  // a matrix of every clause would be mostly empty and unreadable.
-  const rows = graph.forms
-    .map((f) => {
-      const policy = graph.policies.find((p) => p.id === f.policy)
-      const hits = new Map<string, 'primary' | 'cross'>()
-      hits.set(f.primaryClause, 'primary')
-      for (const x of f.alsoSatisfies) if (!hits.has(x)) hits.set(x, 'cross')
-      return { form: f, policy, hits }
-    })
-    .filter((r) => r.hits.size > 1)
+  const { rows, columns } = crossMapMatrix(graph)
 
-  const columns = graph.clauses.filter((c) => rows.some((r) => r.hits.has(c.clauseId)))
   const cols = `300px repeat(${columns.length}, 34px) 180px`
 
   return (

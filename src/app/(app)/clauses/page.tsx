@@ -1,56 +1,20 @@
 import { Suspense } from 'react'
 import { ClauseFilters } from '@/components/ClauseFilters'
 import { ClauseTree } from '@/components/ClauseTree'
-import { crossMapOf, loadGraph } from '@/lib/data'
+import { filterClauses, loadGraph, openChainKeys, type ClauseFilter } from '@/lib/data'
 
 export const dynamic = 'force-dynamic'
 
-type Search = { q?: string; std?: string; status?: string; owner?: string; scope?: string }
-
-export default async function ClausesPage({ searchParams }: { searchParams: Promise<Search> }) {
+export default async function ClausesPage({
+  searchParams,
+}: {
+  searchParams: Promise<ClauseFilter>
+}) {
   const { q = '', std = 'all', status = 'all', owner = '', scope = 'tracked' } = await searchParams
   const graph = await loadGraph()
-  const needle = q.trim().toLowerCase()
 
-  const clauses = graph.clauses.filter((c) => {
-    // The whole ISO catalogue is loaded (ADR-0011). The default view is the
-    // requirements this ISMS has taken into scope — weight above 0 — and the
-    // rest are one chip away, or findable by searching for the clause number.
-    if (scope === 'tracked' && (c.criticality ?? 1) === 0 && !needle) return false
-    if (std !== 'all' && c.standard !== std) return false
-    if (status !== 'all' && c.status !== status) return false
-    if (owner && c.owner.name !== owner) return false
-    if (!needle) return true
-    return (
-      c.clauseId.toLowerCase().includes(needle) ||
-      c.title.toLowerCase().includes(needle) ||
-      c.owner.name.toLowerCase().includes(needle) ||
-      crossMapOf(c).some((x) => x.toLowerCase().includes(needle)) ||
-      c.policies.some(
-        (p) =>
-          p.name.toLowerCase().includes(needle) ||
-          p.forms.some(
-            (f) =>
-              f.name.toLowerCase().includes(needle) ||
-              f.code.toLowerCase().includes(needle) ||
-              f.evidence.some((e) => e.title.toLowerCase().includes(needle)),
-          ),
-      )
-    )
-  })
-
-  // A search or a single result opens the chain: an auditor asking about a
-  // clause should see its evidence without another click.
-  const initialOpen =
-    needle || clauses.length <= 3
-      ? clauses.flatMap((c) => [
-          c.clauseId,
-          ...c.policies.flatMap((p) => [
-            `${c.clauseId}|${p.name}`,
-            ...p.forms.map((f) => `${c.clauseId}|${p.name}|${f.code}`),
-          ]),
-        ])
-      : []
+  const clauses = filterClauses(graph.clauses, { q, std, status, owner, scope })
+  const initialOpen = openChainKeys(clauses, !!q.trim())
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>

@@ -1,5 +1,14 @@
 import Link from 'next/link'
-import { crossMapOf, loadGraph, readiness, type ClauseNode } from '@/lib/data'
+import {
+  crossMapOf,
+  expiryHorizon,
+  loadGraph,
+  readiness,
+  statusCount,
+  trackedClauses,
+  SOON_DAYS,
+  type ClauseNode,
+} from '@/lib/data'
 import { STATUS_META, dueColor, fmtDate, relDue, type StatusKey } from '@/lib/format'
 import { CrossMapChips } from '@/components/Badges'
 
@@ -17,10 +26,7 @@ function StandardCard({
   audit: string
 }) {
   const score = readiness(clauses)
-  const bar = STATUS_ORDER.map((s) => ({
-    s,
-    n: clauses.filter((c) => c.status === s).length,
-  })).filter((x) => x.n)
+  const bar = STATUS_ORDER.map((s) => ({ s, n: statusCount(clauses, s) })).filter((x) => x.n)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -43,17 +49,7 @@ function StandardCard({
           <div
             key={s}
             title={`${STATUS_META[s].label}: ${n}`}
-            style={{
-              flex: n,
-              background:
-                s === 'compliant'
-                  ? '#21201c'
-                  : s === 'progress'
-                    ? '#0073e6'
-                    : s === 'review'
-                      ? 'rgba(168,86,42,.45)'
-                      : '#a8562a',
-            }}
+            style={{ flex: n, background: STATUS_META[s].bar }}
           />
         ))}
       </div>
@@ -63,50 +59,15 @@ function StandardCard({
 
 export default async function DashboardPage() {
   const graph = await loadGraph()
-  const { clauses, evidence, activity } = graph
+  const { activity } = graph
 
-  // Referenced-only stubs carry weight 0: they exist so cross-map links
-  // resolve, and they must not count as tracked requirements on the dashboard.
-  const tracked = clauses.filter((c) => (c.criticality ?? 1) > 0)
+  const tracked = trackedClauses(graph.clauses)
   const byStandard = (std: string) => tracked.filter((c) => c.standard === std)
 
-  // Expiries and reviews come from both clause review dates and evidence
-  // expiry dates, so nothing that can lapse is invisible on the dashboard.
-  type Expiry = { name: string; clause: string; owner: string; date: string; href: string }
-  const expiries: Expiry[] = [
-    ...clauses
-      .filter((c) => c.nextReview)
-      .map((c) => ({
-        name: `Clause review · ${c.title}`,
-        clause: c.clauseId,
-        owner: c.owner.name,
-        date: c.nextReview!,
-        href: `/clauses?q=${encodeURIComponent(c.clauseId)}`,
-      })),
-    ...evidence
-      .filter((e) => e.expiryDate)
-      .map((e) => ({
-        name: e.title,
-        clause: e.satisfies[0] ?? '—',
-        owner: e.uploader.name,
-        date: e.expiryDate!,
-        href: `/evidence/${e.id}`,
-      })),
-  ].sort((a, b) => a.date.localeCompare(b.date))
-
-  const now = new Date()
-  const overdue = expiries.filter((x) => new Date(x.date) < now).length
-  const soon = expiries.filter((x) => {
-    const d = (new Date(x.date).getTime() - now.getTime()) / 86400000
-    return d >= 0 && d <= 30
-  }).length
+  const { items: expiries, overdue, soon } = expiryHorizon(graph)
 
   const statusCells = STATUS_ORDER.flatMap((s) =>
-    ['27001', '9001'].map((std) => ({
-      s,
-      std,
-      n: tracked.filter((c) => c.status === s && c.standard === std).length,
-    })),
+    ['27001', '9001'].map((std) => ({ s, std, n: statusCount(tracked, s, std) })),
   )
 
   const crossMapped = tracked.filter((c) => crossMapOf(c).length).length
@@ -163,7 +124,7 @@ export default async function DashboardPage() {
           <div className="section-head">
             <div className="eyebrow">Expiring &amp; due for review</div>
             <div className="mono" style={{ fontSize: 10.5, color: 'var(--warn)' }}>
-              {overdue} overdue · {soon} within 30 days
+              {overdue} overdue · {soon} within {SOON_DAYS} days
             </div>
           </div>
           {expiries.slice(0, 8).map((x) => (
@@ -240,10 +201,7 @@ export default async function DashboardPage() {
                     style={{
                       font: '400 30px/1 Inter, sans-serif',
                       letterSpacing: '-0.035em',
-                      color:
-                        STATUS_META[cell.s].color === '#fdfdfc'
-                          ? 'var(--warn)'
-                          : STATUS_META[cell.s].color,
+                      color: STATUS_META[cell.s].ink,
                     }}
                   >
                     {cell.n}
@@ -259,10 +217,7 @@ export default async function DashboardPage() {
                     fontWeight: 500,
                     letterSpacing: '.09em',
                     textTransform: 'uppercase',
-                    color:
-                      STATUS_META[cell.s].color === '#fdfdfc'
-                        ? 'var(--warn)'
-                        : STATUS_META[cell.s].color,
+                    color: STATUS_META[cell.s].ink,
                   }}
                 >
                   {STATUS_META[cell.s].label}
