@@ -1,7 +1,9 @@
 import type { CollectionConfig } from 'payload'
+import { complianceAccess } from '../lib/access'
 
 export const Evidence: CollectionConfig = {
   slug: 'evidence',
+  access: complianceAccess,
   upload: {
     // Vercel Blob handles storage; disable local disk writes so the build works on Vercel.
     disableLocalStorage: true,

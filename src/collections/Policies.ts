@@ -1,7 +1,9 @@
 import type { CollectionConfig } from 'payload'
+import { complianceAccess } from '../lib/access'
 
 export const Policies: CollectionConfig = {
   slug: 'policies',
+  access: complianceAccess,
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'version', 'status', 'owner'],

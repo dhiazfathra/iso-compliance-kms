@@ -1,7 +1,9 @@
 import type { CollectionConfig } from 'payload'
+import { complianceAccess } from '../lib/access'
 
 export const Forms: CollectionConfig = {
   slug: 'forms',
+  access: complianceAccess,
   admin: { useAsTitle: 'name', defaultColumns: ['code', 'name', 'policy'], group: 'Compliance' },
   fields: [
     {

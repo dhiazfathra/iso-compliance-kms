@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 const TITLES: [RegExp, string, string][] = [
@@ -17,8 +17,9 @@ const TITLES: [RegExp, string, string][] = [
   [/^\/audit-session/, 'Audit session', 'Read-only presenting mirror'],
 ]
 
-export function Topbar() {
+export function Topbar({ user }: { user: { name: string; access?: string | null } }) {
   const path = usePathname()
+  const router = useRouter()
   const [now, setNow] = useState<string>('')
 
   useEffect(() => {
@@ -70,9 +71,24 @@ export function Topbar() {
         >
           {now}
         </div>
+        <span className="mono" style={{ fontSize: 11, color: 'var(--muted)' }}>
+          {user.name}
+          {user.access === 'read' ? ' · read-only' : ''}
+        </span>
         <Link href="/audit-session" className="btn">
           Audit session
         </Link>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={async () => {
+            await fetch('/api/users/logout', { method: 'POST' })
+            router.replace('/login')
+            router.refresh()
+          }}
+        >
+          Sign out
+        </button>
       </div>
     </header>
   )

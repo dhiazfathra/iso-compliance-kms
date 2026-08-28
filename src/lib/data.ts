@@ -1,6 +1,7 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { cache } from 'react'
+import { requireUser } from './auth'
 
 export * from './graph'
 
@@ -93,8 +94,11 @@ const clauseCode = (v: unknown): string =>
  * gives every screen the same cross-mapping view.
  */
 export const loadGraph = cache(async (): Promise<Graph> => {
+  const user = await requireUser()
   const payload = await getPayload({ config })
-  const opts = { limit: 1000, depth: 1, overrideAccess: true, pagination: false } as const
+  // The signed-in user is passed through so every read is checked by the
+  // collection's own access rules (ADR-0008); nothing here overrides them.
+  const opts = { limit: 1000, depth: 1, overrideAccess: false, user, pagination: false } as const
 
   const [users, clauses, policies, forms, evidence, gaps, activity] = await Promise.all([
     payload.find({ collection: 'users', ...opts }),

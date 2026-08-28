@@ -1,7 +1,9 @@
 import type { CollectionConfig } from 'payload'
+import { complianceAccess } from '../lib/access'
 
 export const Gaps: CollectionConfig = {
   slug: 'gaps',
+  access: complianceAccess,
   admin: {
     useAsTitle: 'finding',
     defaultColumns: ['clause', 'owner', 'due', 'progress'],

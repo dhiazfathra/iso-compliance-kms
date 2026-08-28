@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { complianceAccess } from '../lib/access'
 
 export const STATUSES = [
   { label: 'Compliant', value: 'compliant' },
@@ -14,6 +15,7 @@ export const STANDARDS = [
 
 export const Clauses: CollectionConfig = {
   slug: 'clauses',
+  access: complianceAccess,
   admin: {
     useAsTitle: 'clauseId',
     defaultColumns: ['clauseId', 'standard', 'title', 'status', 'owner', 'nextReview'],

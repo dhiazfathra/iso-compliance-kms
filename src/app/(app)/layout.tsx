@@ -4,6 +4,7 @@ import './globals.css'
 import { Sidebar } from '@/components/Sidebar'
 import { Topbar } from '@/components/Topbar'
 import { loadGraph } from '@/lib/data'
+import { requireUser } from '@/lib/auth'
 
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'], variable: '--font-inter' })
 const mono = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-mono' })
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 }
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const user = await requireUser()
   const graph = await loadGraph()
   const counts = {
     clauses: graph.clauses.length,
@@ -27,7 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="shell">
           <Sidebar counts={counts} />
           <main className="main">
-            <Topbar />
+            <Topbar user={{ name: user.name, access: user.access }} />
             <div className="content">{children}</div>
           </main>
         </div>
