@@ -59,540 +59,541 @@ export type SupportedTimezones =
   | 'Pacific/Guam'
   | 'Pacific/Noumea'
   | 'Pacific/Auckland'
-  | 'Pacific/Fiji';
+  | 'Pacific/Fiji'
 
 export interface Config {
   auth: {
-    users: UserAuthOperations;
-  };
-  blocks: {};
+    users: UserAuthOperations
+  }
+  blocks: {}
   collections: {
-    users: User;
-    clauses: Clause;
-    policies: Policy;
-    forms: Form;
-    evidence: Evidence;
-    gaps: Gap;
-    activity: Activity;
-    'payload-kv': PayloadKv;
-    'payload-locked-documents': PayloadLockedDocument;
-    'payload-preferences': PayloadPreference;
-    'payload-migrations': PayloadMigration;
-  };
-  collectionsJoins: {};
+    users: User
+    clauses: Clause
+    policies: Policy
+    forms: Form
+    evidence: Evidence
+    gaps: Gap
+    activity: Activity
+    'payload-kv': PayloadKv
+    'payload-locked-documents': PayloadLockedDocument
+    'payload-preferences': PayloadPreference
+    'payload-migrations': PayloadMigration
+  }
+  collectionsJoins: {}
   collectionsSelect: {
-    users: UsersSelect<false> | UsersSelect<true>;
-    clauses: ClausesSelect<false> | ClausesSelect<true>;
-    policies: PoliciesSelect<false> | PoliciesSelect<true>;
-    forms: FormsSelect<false> | FormsSelect<true>;
-    evidence: EvidenceSelect<false> | EvidenceSelect<true>;
-    gaps: GapsSelect<false> | GapsSelect<true>;
-    activity: ActivitySelect<false> | ActivitySelect<true>;
-    'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
-    'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
-    'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
-    'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
-  };
+    users: UsersSelect<false> | UsersSelect<true>
+    clauses: ClausesSelect<false> | ClausesSelect<true>
+    policies: PoliciesSelect<false> | PoliciesSelect<true>
+    forms: FormsSelect<false> | FormsSelect<true>
+    evidence: EvidenceSelect<false> | EvidenceSelect<true>
+    gaps: GapsSelect<false> | GapsSelect<true>
+    activity: ActivitySelect<false> | ActivitySelect<true>
+    'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>
+    'payload-locked-documents':
+      PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>
+    'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>
+    'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>
+  }
   db: {
-    defaultIDType: number;
-  };
-  fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
-  locale: null;
+    defaultIDType: number
+  }
+  fallbackLocale: null
+  globals: {}
+  globalsSelect: {}
+  locale: null
   widgets: {
-    collections: CollectionsWidget;
-  };
-  user: User;
+    collections: CollectionsWidget
+  }
+  user: User
   jobs: {
-    tasks: unknown;
-    workflows: unknown;
-  };
+    tasks: unknown
+    workflows: unknown
+  }
 }
 export interface UserAuthOperations {
   forgotPassword: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   login: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   registerFirstUser: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   unlock: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
-  id: number;
-  name: string;
+  id: number
+  name: string
   /**
    * e.g. Compliance Manager
    */
-  role: string;
-  access?: ('read' | 'write' | 'admin') | null;
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
+  role: string
+  access?: ('read' | 'write' | 'admin') | null
+  updatedAt: string
+  createdAt: string
+  email: string
+  resetPasswordToken?: string | null
+  resetPasswordExpiration?: string | null
+  salt?: string | null
+  hash?: string | null
+  loginAttempts?: number | null
+  lockUntil?: string | null
   sessions?:
     | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
+        id: string
+        createdAt?: string | null
+        expiresAt: string
       }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
+    | null
+  password?: string | null
+  collection: 'users'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "clauses".
  */
 export interface Clause {
-  id: number;
+  id: number
   /**
    * e.g. A.5.15 or 9.2
    */
-  clauseId: string;
-  standard: '27001' | '9001';
-  title: string;
-  status: 'compliant' | 'progress' | 'review' | 'gap';
-  owner: number | User;
-  nextReview?: string | null;
+  clauseId: string
+  standard: '27001' | '9001'
+  title: string
+  status: 'compliant' | 'progress' | 'review' | 'gap'
+  owner: number | User
+  nextReview?: string | null
   /**
    * Weight used by the readiness score
    */
-  criticality?: number | null;
-  updatedAt: string;
-  createdAt: string;
+  criticality?: number | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "policies".
  */
 export interface Policy {
-  id: number;
-  name: string;
-  version: string;
-  status: 'Approved' | 'In review' | 'Draft';
-  owner?: (number | null) | User;
-  primaryClause: number | Clause;
+  id: number
+  name: string
+  version: string
+  status: 'Approved' | 'In review' | 'Draft'
+  owner?: (number | null) | User
+  primaryClause: number | Clause
   /**
    * Every requirement this policy satisfies, including cross-mapped ones
    */
-  clauses?: (number | Clause)[] | null;
+  clauses?: (number | Clause)[] | null
   revisions?:
     | {
-        version: string;
-        date: string;
-        author?: (number | null) | User;
-        approval?: string | null;
-        status?: string | null;
-        note?: string | null;
-        id?: string | null;
+        version: string
+        date: string
+        author?: (number | null) | User
+        approval?: string | null
+        status?: string | null
+        note?: string | null
+        id?: string | null
       }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
+    | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "forms".
  */
 export interface Form {
-  id: number;
+  id: number
   /**
    * e.g. FRM-AC-03
    */
-  code: string;
-  name: string;
-  policy: number | Policy;
-  primaryClause: number | Clause;
+  code: string
+  name: string
+  policy: number | Policy
+  primaryClause: number | Clause
   /**
    * Cross-mapped requirements this form also satisfies
    */
-  alsoSatisfies?: (number | Clause)[] | null;
+  alsoSatisfies?: (number | Clause)[] | null
   externalRefs?:
     | {
-        ref: string;
-        id?: string | null;
+        ref: string
+        id?: string | null
       }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
+    | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "evidence".
  */
 export interface Evidence {
-  id: number;
+  id: number
   /**
    * Filename as recorded in the register
    */
-  title: string;
-  fileType: 'PDF' | 'XLSX' | 'PPTX' | 'DOCX' | 'PNG' | 'JPG';
-  form: number | Form;
+  title: string
+  fileType: 'PDF' | 'XLSX' | 'PPTX' | 'DOCX' | 'PNG' | 'JPG'
+  form: number | Form
   /**
    * Requirements this evidence explicitly satisfies (primary first)
    */
-  satisfies: (number | Clause)[];
-  uploader: number | User;
-  uploadedAt: string;
-  expiryDate?: string | null;
-  reviewDate?: string | null;
-  retention?: string | null;
+  satisfies: (number | Clause)[]
+  uploader: number | User
+  uploadedAt: string
+  expiryDate?: string | null
+  reviewDate?: string | null
+  retention?: string | null
   /**
    * Content digest recorded at upload
    */
-  sha?: string | null;
+  sha?: string | null
   revisions?:
     | {
-        version: string;
-        date: string;
-        author?: (number | null) | User;
-        note?: string | null;
-        id?: string | null;
+        version: string
+        date: string
+        author?: (number | null) | User
+        note?: string | null
+        id?: string | null
       }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
+    | null
+  updatedAt: string
+  createdAt: string
+  url?: string | null
+  thumbnailURL?: string | null
+  filename?: string | null
+  mimeType?: string | null
+  filesize?: number | null
+  width?: number | null
+  height?: number | null
+  focalX?: number | null
+  focalY?: number | null
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "gaps".
  */
 export interface Gap {
-  id: number;
-  clause: number | Clause;
-  finding: string;
-  task: string;
-  owner: number | User;
-  due: string;
-  blocking?: boolean | null;
-  progress?: number | null;
-  updatedAt: string;
-  createdAt: string;
+  id: number
+  clause: number | Clause
+  finding: string
+  task: string
+  owner: number | User
+  due: string
+  blocking?: boolean | null
+  progress?: number | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "activity".
  */
 export interface Activity {
-  id: number;
-  at: string;
-  actor: string;
-  action: string;
+  id: number
+  at: string
+  actor: string
+  action: string
   /**
    * Clause id, pack id or session id
    */
-  ref?: string | null;
-  updatedAt: string;
-  createdAt: string;
+  ref?: string | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
-  id: number;
-  key: string;
+  id: number
+  key: string
   data:
     | {
-        [k: string]: unknown;
+        [k: string]: unknown
       }
     | unknown[]
     | string
     | number
     | boolean
-    | null;
+    | null
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
-  id: number;
+  id: number
   document?:
     | ({
-        relationTo: 'users';
-        value: number | User;
+        relationTo: 'users'
+        value: number | User
       } | null)
     | ({
-        relationTo: 'clauses';
-        value: number | Clause;
+        relationTo: 'clauses'
+        value: number | Clause
       } | null)
     | ({
-        relationTo: 'policies';
-        value: number | Policy;
+        relationTo: 'policies'
+        value: number | Policy
       } | null)
     | ({
-        relationTo: 'forms';
-        value: number | Form;
+        relationTo: 'forms'
+        value: number | Form
       } | null)
     | ({
-        relationTo: 'evidence';
-        value: number | Evidence;
+        relationTo: 'evidence'
+        value: number | Evidence
       } | null)
     | ({
-        relationTo: 'gaps';
-        value: number | Gap;
+        relationTo: 'gaps'
+        value: number | Gap
       } | null)
     | ({
-        relationTo: 'activity';
-        value: number | Activity;
-      } | null);
-  globalSlug?: string | null;
+        relationTo: 'activity'
+        value: number | Activity
+      } | null)
+  globalSlug?: string | null
   user: {
-    relationTo: 'users';
-    value: number | User;
-  };
-  updatedAt: string;
-  createdAt: string;
+    relationTo: 'users'
+    value: number | User
+  }
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-preferences".
  */
 export interface PayloadPreference {
-  id: number;
+  id: number
   user: {
-    relationTo: 'users';
-    value: number | User;
-  };
-  key?: string | null;
+    relationTo: 'users'
+    value: number | User
+  }
+  key?: string | null
   value?:
     | {
-        [k: string]: unknown;
+        [k: string]: unknown
       }
     | unknown[]
     | string
     | number
     | boolean
-    | null;
-  updatedAt: string;
-  createdAt: string;
+    | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-migrations".
  */
 export interface PayloadMigration {
-  id: number;
-  name?: string | null;
-  batch?: number | null;
-  updatedAt: string;
-  createdAt: string;
+  id: number
+  name?: string | null
+  batch?: number | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
-  name?: T;
-  role?: T;
-  access?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
+  name?: T
+  role?: T
+  access?: T
+  updatedAt?: T
+  createdAt?: T
+  email?: T
+  resetPasswordToken?: T
+  resetPasswordExpiration?: T
+  salt?: T
+  hash?: T
+  loginAttempts?: T
+  lockUntil?: T
   sessions?:
     | T
     | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
-      };
+        id?: T
+        createdAt?: T
+        expiresAt?: T
+      }
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "clauses_select".
  */
 export interface ClausesSelect<T extends boolean = true> {
-  clauseId?: T;
-  standard?: T;
-  title?: T;
-  status?: T;
-  owner?: T;
-  nextReview?: T;
-  criticality?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  clauseId?: T
+  standard?: T
+  title?: T
+  status?: T
+  owner?: T
+  nextReview?: T
+  criticality?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "policies_select".
  */
 export interface PoliciesSelect<T extends boolean = true> {
-  name?: T;
-  version?: T;
-  status?: T;
-  owner?: T;
-  primaryClause?: T;
-  clauses?: T;
+  name?: T
+  version?: T
+  status?: T
+  owner?: T
+  primaryClause?: T
+  clauses?: T
   revisions?:
     | T
     | {
-        version?: T;
-        date?: T;
-        author?: T;
-        approval?: T;
-        status?: T;
-        note?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
+        version?: T
+        date?: T
+        author?: T
+        approval?: T
+        status?: T
+        note?: T
+        id?: T
+      }
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "forms_select".
  */
 export interface FormsSelect<T extends boolean = true> {
-  code?: T;
-  name?: T;
-  policy?: T;
-  primaryClause?: T;
-  alsoSatisfies?: T;
+  code?: T
+  name?: T
+  policy?: T
+  primaryClause?: T
+  alsoSatisfies?: T
   externalRefs?:
     | T
     | {
-        ref?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
+        ref?: T
+        id?: T
+      }
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "evidence_select".
  */
 export interface EvidenceSelect<T extends boolean = true> {
-  title?: T;
-  fileType?: T;
-  form?: T;
-  satisfies?: T;
-  uploader?: T;
-  uploadedAt?: T;
-  expiryDate?: T;
-  reviewDate?: T;
-  retention?: T;
-  sha?: T;
+  title?: T
+  fileType?: T
+  form?: T
+  satisfies?: T
+  uploader?: T
+  uploadedAt?: T
+  expiryDate?: T
+  reviewDate?: T
+  retention?: T
+  sha?: T
   revisions?:
     | T
     | {
-        version?: T;
-        date?: T;
-        author?: T;
-        note?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
+        version?: T
+        date?: T
+        author?: T
+        note?: T
+        id?: T
+      }
+  updatedAt?: T
+  createdAt?: T
+  url?: T
+  thumbnailURL?: T
+  filename?: T
+  mimeType?: T
+  filesize?: T
+  width?: T
+  height?: T
+  focalX?: T
+  focalY?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "gaps_select".
  */
 export interface GapsSelect<T extends boolean = true> {
-  clause?: T;
-  finding?: T;
-  task?: T;
-  owner?: T;
-  due?: T;
-  blocking?: T;
-  progress?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  clause?: T
+  finding?: T
+  task?: T
+  owner?: T
+  due?: T
+  blocking?: T
+  progress?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "activity_select".
  */
 export interface ActivitySelect<T extends boolean = true> {
-  at?: T;
-  actor?: T;
-  action?: T;
-  ref?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  at?: T
+  actor?: T
+  action?: T
+  ref?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
-  key?: T;
-  data?: T;
+  key?: T
+  data?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents_select".
  */
 export interface PayloadLockedDocumentsSelect<T extends boolean = true> {
-  document?: T;
-  globalSlug?: T;
-  user?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  document?: T
+  globalSlug?: T
+  user?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-preferences_select".
  */
 export interface PayloadPreferencesSelect<T extends boolean = true> {
-  user?: T;
-  key?: T;
-  value?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  user?: T
+  key?: T
+  value?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-migrations_select".
  */
 export interface PayloadMigrationsSelect<T extends boolean = true> {
-  name?: T;
-  batch?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  name?: T
+  batch?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -600,18 +601,17 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  */
 export interface CollectionsWidget {
   data?: {
-    [k: string]: unknown;
-  };
-  width: 'full';
+    [k: string]: unknown
+  }
+  width: 'full'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "auth".
  */
 export interface Auth {
-  [k: string]: unknown;
+  [k: string]: unknown
 }
-
 
 declare module 'payload' {
   export interface GeneratedTypes extends Config {}
