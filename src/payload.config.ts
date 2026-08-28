@@ -13,6 +13,7 @@ import { Evidence } from './collections/Evidence'
 import { Gaps } from './collections/Gaps'
 import { Activity } from './collections/Activity'
 import { AuditSessions } from './collections/AuditSessions'
+import { AuditPacks } from './collections/AuditPacks'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -22,7 +23,17 @@ const blobToken = process.env.BLOB_READ_WRITE_TOKEN
 
 export default buildConfig({
   admin: { user: Users.slug, importMap: { baseDir: path.resolve(dirname) } },
-  collections: [Users, Clauses, Policies, Forms, Evidence, Gaps, Activity, AuditSessions],
+  collections: [
+    Users,
+    Clauses,
+    Policies,
+    Forms,
+    Evidence,
+    Gaps,
+    Activity,
+    AuditSessions,
+    AuditPacks,
+  ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || 'dev-secret-change-me',
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },

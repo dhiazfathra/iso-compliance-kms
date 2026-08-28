@@ -75,6 +75,7 @@ export interface Config {
     gaps: Gap
     activity: Activity
     'audit-sessions': AuditSession
+    'audit-packs': AuditPack
     'payload-kv': PayloadKv
     'payload-locked-documents': PayloadLockedDocument
     'payload-preferences': PayloadPreference
@@ -90,6 +91,7 @@ export interface Config {
     gaps: GapsSelect<false> | GapsSelect<true>
     activity: ActivitySelect<false> | ActivitySelect<true>
     'audit-sessions': AuditSessionsSelect<false> | AuditSessionsSelect<true>
+    'audit-packs': AuditPacksSelect<false> | AuditPacksSelect<true>
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>
     'payload-locked-documents':
       PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>
@@ -359,6 +361,33 @@ export interface AuditSession {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-packs".
+ */
+export interface AuditPack {
+  id: number
+  packId: string
+  status: 'building' | 'ready' | 'failed' | 'expired'
+  scope: string
+  requestedBy: number | User
+  requestedAt: string
+  completedAt?: string | null
+  /**
+   * After this the ZIP is deleted from storage by the daily sweep
+   */
+  expiresAt?: string | null
+  url?: string | null
+  /**
+   * Blob object key
+   */
+  pathname?: string | null
+  size?: number | null
+  itemCount?: number | null
+  error?: string | null
+  updatedAt: string
+  createdAt: string
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -412,6 +441,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'audit-sessions'
         value: number | AuditSession
+      } | null)
+    | ({
+        relationTo: 'audit-packs'
+        value: number | AuditPack
       } | null)
   globalSlug?: string | null
   user: {
@@ -621,6 +654,26 @@ export interface AuditSessionsSelect<T extends boolean = true> {
         id?: T
       }
   downloads?: T
+  updatedAt?: T
+  createdAt?: T
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-packs_select".
+ */
+export interface AuditPacksSelect<T extends boolean = true> {
+  packId?: T
+  status?: T
+  scope?: T
+  requestedBy?: T
+  requestedAt?: T
+  completedAt?: T
+  expiresAt?: T
+  url?: T
+  pathname?: T
+  size?: T
+  itemCount?: T
+  error?: T
   updatedAt?: T
   createdAt?: T
 }

@@ -23,7 +23,8 @@ function crc32(buf: Buffer): number {
   return (c ^ 0xffffffff) >>> 0
 }
 
-export type ZipEntry = { path: string; content: string }
+/** Text for generated files, a Buffer for evidence copied into an audit pack. */
+export type ZipEntry = { path: string; content: string | Buffer }
 
 export function zip(entries: ZipEntry[]): Buffer {
   const locals: Buffer[] = []
@@ -32,7 +33,7 @@ export function zip(entries: ZipEntry[]): Buffer {
 
   for (const e of entries) {
     const name = Buffer.from(e.path, 'utf8')
-    const data = Buffer.from(e.content, 'utf8')
+    const data = Buffer.isBuffer(e.content) ? e.content : Buffer.from(e.content, 'utf8')
     const crc = crc32(data)
 
     const local = Buffer.alloc(30 + name.length)

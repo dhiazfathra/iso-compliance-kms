@@ -3,7 +3,7 @@
  * collection and Payload validates uploaded bytes against the declared type,
  * so every placeholder has to be a genuinely valid file of its format.
  */
-import { zip } from './zip'
+import { zip } from '../lib/zip'
 
 const MIME: Record<string, string> = {
   PDF: 'application/pdf',

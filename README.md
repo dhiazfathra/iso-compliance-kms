@@ -50,6 +50,7 @@ gaps and activity before reloading them.
 | `DATABASE_URI`          | yes         | `file:./iso-kms.db` locally, `libsql://…` on Turso |
 | `DATABASE_AUTH_TOKEN`   | on Turso    | Turso database token                               |
 | `BLOB_READ_WRITE_TOKEN` | for uploads | Vercel Blob store token                            |
+| `CRON_SECRET`           | on Vercel   | Bearer token the daily audit-pack sweep requires   |
 
 Without `BLOB_READ_WRITE_TOKEN` the app still builds and runs; evidence records
 carry metadata but no stored file, and the preview panel says so.
@@ -65,7 +66,7 @@ carry metadata but no stored file, and the preview panel says so.
 | `/policies`, `/policies/[id]` | Controlled documents, the forms issued under them, and revision history                                        |
 | `/gaps`                       | Open findings, remediation tasks, owners, progress and due dates                                               |
 | `/owners`                     | Requirement mix per accountable owner                                                                          |
-| `/audit-pack`                 | What an export for the certification body would contain                                                        |
+| `/audit-pack`                 | Export for the certification body: request a ZIP, see past exports, download one                               |
 | `/audit-session`              | Read-only presenting mode: one requirement, large type, whole chain of evidence, live session counters         |
 | `/admin`                      | Payload admin for maintaining the data                                                                         |
 
@@ -82,6 +83,7 @@ src/
   components/         shared UI: sidebar, clause tree, chips, preview
   lib/access.ts       role ranking and every collection's access rules
   lib/auth.ts         session lookup, audit-session expiry, login guard
+  lib/audit-pack.ts   ZIP export: contents, build job and storage sweep
   lib/audit-session.ts  view and download bookkeeping for auditor sessions
   lib/data.ts         loads and assembles the whole compliance graph
   lib/format.ts       dates, due-date colour ramp, status metadata
@@ -107,12 +109,15 @@ Decisions are recorded in [`docs/decisions/`](docs/decisions):
 - [0009](docs/decisions/0009-external-auditor-sessions.md) — time-boxed external-auditor sessions
 - [0010](docs/decisions/0010-evidence-bytes-served-through-the-app.md) — evidence bytes served through the app
 - [0011](docs/decisions/0011-full-requirement-catalogue.md) — the full requirement catalogue, scored by scope
+- [0012](docs/decisions/0012-audit-pack-export.md) — the audit pack as a real ZIP export
 
 ## Deploying to Vercel
 
 1. Create a Turso database and a Vercel Blob store.
-2. Set `PAYLOAD_SECRET`, `DATABASE_URI`, `DATABASE_AUTH_TOKEN` and
-   `BLOB_READ_WRITE_TOKEN` in the Vercel project.
+2. Set `PAYLOAD_SECRET`, `DATABASE_URI`, `DATABASE_AUTH_TOKEN`,
+   `BLOB_READ_WRITE_TOKEN` and `CRON_SECRET` in the Vercel project. Without
+   `CRON_SECRET` the daily audit-pack sweep refuses to run and exports are never
+   deleted (ADR-0012).
 3. Deploy. `vercel.json` runs `bun run migrate` before `next build`, so the
    schema comes from `src/migrations/` and nothing is derived from the running
    config (see [ADR-0002](docs/decisions/0002-turso-libsql-database.md)).
@@ -143,7 +148,9 @@ trip, not query count.
 
 ## Known limits
 
-- Audit pack generation is a scoped preview, not a running export job.
+- Pack building holds every evidence file in memory in one function
+  invocation. Fine at this size (29 files, 66 KB zipped); a repository with
+  gigabytes of evidence needs streaming or a queue (ADR-0012).
 - The readiness weighting (compliant 1, needs review 0.75, in progress 0.5, gap 0) is a stated assumption, not a customer-supplied formula.
 - Referenced-only clause stubs exist so cross-map links resolve; they carry
   weight 0 and are excluded from readiness and dashboard counts.

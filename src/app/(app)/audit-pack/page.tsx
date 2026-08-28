@@ -1,10 +1,27 @@
 import Link from 'next/link'
+import { getPayload } from 'payload'
+import config from '@payload-config'
 import { loadGraph } from '@/lib/data'
+import { requireUser } from '@/lib/auth'
+import { hasLevel } from '@/lib/access'
+import { fmtDate } from '@/lib/format'
+import { RequestPack } from '@/components/RequestPack'
+import { PACK_TTL_DAYS } from '@/lib/audit-pack'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AuditPackPage() {
   const graph = await loadGraph()
+  const user = await requireUser()
+  const payload = await getPayload({ config })
+  const packs = await payload.find({
+    collection: 'audit-packs',
+    sort: '-requestedAt',
+    limit: 8,
+    depth: 1,
+    overrideAccess: false,
+    user,
+  })
   const crossMapped = graph.forms.filter((f) => f.alsoSatisfies.length).length
   const bytes = graph.evidence.reduce((n, e) => n + (e.filesize ?? 0), 0)
 
@@ -92,6 +109,69 @@ export default async function AuditPackPage() {
               </div>
             ))}
           </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div className="section-head">
+              <span className="eyebrow">Exports</span>
+              <span className="mono" style={{ fontSize: 11, color: 'var(--muted)' }}>
+                kept {PACK_TTL_DAYS} days
+              </span>
+            </div>
+            {packs.docs.length === 0 && (
+              <div style={{ fontSize: 12.5, color: 'var(--muted)', padding: '12px 0' }}>
+                No pack has been exported yet.
+              </div>
+            )}
+            {packs.docs.map((p) => (
+              <div
+                key={p.packId}
+                className="row responsive-grid"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '110px minmax(0,1fr) 120px 110px 96px',
+                  gap: 14,
+                  alignItems: 'center',
+                  padding: '12px 0',
+                }}
+              >
+                <span className="mono" style={{ fontSize: 11.5 }}>
+                  {p.packId}
+                </span>
+                <span style={{ fontSize: 12.5, color: 'var(--secondary)' }}>
+                  {p.status === 'failed' ? (p.error ?? 'Export failed') : p.scope}
+                </span>
+                <span className="mono" style={{ fontSize: 11, color: 'var(--muted)' }}>
+                  {fmtDate(p.requestedAt)}
+                </span>
+                <span
+                  className="mono"
+                  style={{
+                    fontSize: 11,
+                    color: p.status === 'ready' ? 'var(--ink)' : 'var(--muted)',
+                  }}
+                >
+                  {p.status === 'ready'
+                    ? `${Math.max(1, Math.round((p.size ?? 0) / 1024))} KB`
+                    : p.status}
+                </span>
+                <span style={{ textAlign: 'right' }}>
+                  {p.status === 'ready' ? (
+                    <a
+                      className="mono"
+                      style={{ fontSize: 11.5 }}
+                      href={`/audit-pack/${p.packId}/download`}
+                    >
+                      Download
+                    </a>
+                  ) : (
+                    <span className="mono" style={{ fontSize: 11, color: 'var(--muted)' }}>
+                      —
+                    </span>
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div
@@ -131,12 +211,13 @@ export default async function AuditPackPage() {
               </span>
             </div>
           </div>
-          <Link href="/evidence" className="btn" style={{ textAlign: 'center' }}>
+          <RequestPack disabled={!hasLevel(user, 'write')} />
+          <Link href="/evidence" className="btn btn-ghost" style={{ textAlign: 'center' }}>
             Browse source records
           </Link>
           <span className="mono" style={{ fontSize: 10.5, color: 'var(--muted)', lineHeight: 1.5 }}>
-            Pack generation runs against the evidence store; wire it to a background job before the
-            first live audit.
+            The ZIP is built after the request returns and kept for 14 days, then deleted from
+            storage by the daily sweep.
           </span>
         </div>
       </div>

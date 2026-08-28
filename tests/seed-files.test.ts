@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { placeholderFile } from '../src/seed/placeholder'
-import { zip } from '../src/seed/zip'
+import { zip } from '../src/lib/zip'
 
 describe('zip', () => {
   test('writes a readable stored archive', async () => {
