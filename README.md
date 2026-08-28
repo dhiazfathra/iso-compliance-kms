@@ -14,6 +14,7 @@ backed by Turso and Vercel Blob.
 ```bash
 bun install
 cp .env.example .env
+bun run migrate
 bun run seed
 bun run dev
 ```
@@ -31,6 +32,9 @@ and `SEED_ADMIN_PASSWORD`).
 | `bun run build`          | Production build (type-checks as part of the build)    |
 | `bun run start`          | Serve the production build                             |
 | `bun run seed`           | Reset and reload the compliance dataset                |
+| `bun run migrate`        | Apply pending schema migrations                        |
+| `bun run migrate:create` | Write a new migration from the current collections     |
+| `bun run migrate:status` | Show which migrations have run                         |
 | `bun run lint`           | ESLint                                                 |
 | `bun run typecheck`      | `tsc --noEmit`                                         |
 | `bun run generate:types` | Regenerate `src/payload-types.ts` from the collections |
@@ -101,9 +105,9 @@ Decisions are recorded in [`docs/decisions/`](docs/decisions):
 1. Create a Turso database and a Vercel Blob store.
 2. Set `PAYLOAD_SECRET`, `DATABASE_URI`, `DATABASE_AUTH_TOKEN` and
    `BLOB_READ_WRITE_TOKEN` in the Vercel project.
-3. Deploy. The schema is pushed from the collection config on first boot
-   (see [ADR-0002](docs/decisions/0002-turso-libsql-database.md) for when to move
-   to migrations).
+3. Deploy. `vercel.json` runs `bun run migrate` before `next build`, so the
+   schema comes from `src/migrations/` and nothing is derived from the running
+   config (see [ADR-0002](docs/decisions/0002-turso-libsql-database.md)).
 4. Run `bun run seed` against the production database only if you want the
    sample dataset there — it deletes existing compliance records first.
 

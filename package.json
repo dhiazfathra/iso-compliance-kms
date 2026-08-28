@@ -4,14 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
-    "seed": "payload run src/seed/index.ts",
+    "dev": "next dev",
     "generate:types": "payload generate:types",
-    "test": "bun test"
+    "lint": "eslint .",
+    "migrate": "payload migrate",
+    "migrate:create": "payload migrate:create",
+    "migrate:status": "payload migrate:status",
+    "seed": "payload run src/seed/index.ts",
+    "start": "next start",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@payloadcms/db-sqlite": "3.88.0",

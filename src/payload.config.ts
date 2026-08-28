@@ -31,7 +31,10 @@ export default buildConfig({
       url: process.env.DATABASE_URI || 'file:./iso-kms.db',
       authToken: process.env.DATABASE_AUTH_TOKEN,
     },
-    push: true,
+    // Schema comes from checked-in migrations, never from the running config:
+    // production data is not re-seedable. See ADR-0002.
+    push: false,
+    migrationDir: path.resolve(dirname, 'migrations'),
   }),
   sharp: undefined,
   plugins: blobToken
