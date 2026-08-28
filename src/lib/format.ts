@@ -1,7 +1,22 @@
 export const STATUS_META = {
-  compliant: { label: 'Compliant', color: '#21201c', bg: 'transparent', border: 'rgba(33,32,28,0.28)' },
-  progress: { label: 'In progress', color: '#0073e6', bg: 'transparent', border: 'rgba(0,115,230,0.35)' },
-  review: { label: 'Needs review', color: '#a8562a', bg: 'transparent', border: 'rgba(168,86,42,0.34)' },
+  compliant: {
+    label: 'Compliant',
+    color: '#21201c',
+    bg: 'transparent',
+    border: 'rgba(33,32,28,0.28)',
+  },
+  progress: {
+    label: 'In progress',
+    color: '#0073e6',
+    bg: 'transparent',
+    border: 'rgba(0,115,230,0.35)',
+  },
+  review: {
+    label: 'Needs review',
+    color: '#a8562a',
+    bg: 'transparent',
+    border: 'rgba(168,86,42,0.34)',
+  },
   gap: { label: 'Gap', color: '#fdfdfc', bg: '#a8562a', border: '#a8562a' },
 } as const
 

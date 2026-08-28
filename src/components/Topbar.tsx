@@ -45,7 +45,9 @@ export function Topbar() {
   return (
     <header className="topbar">
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, minWidth: 0 }}>
-        <span style={{ font: '500 14.5px Inter, sans-serif', letterSpacing: '-0.01em' }}>{title}</span>
+        <span style={{ font: '500 14.5px Inter, sans-serif', letterSpacing: '-0.01em' }}>
+          {title}
+        </span>
         <span
           className="mono"
           style={{
@@ -61,7 +63,11 @@ export function Topbar() {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 'none' }}>
         {/* suppressHydrationWarning: the clock is client-only by design. */}
-        <div className="mono" style={{ fontSize: 11, color: 'var(--muted)' }} suppressHydrationWarning>
+        <div
+          className="mono"
+          style={{ fontSize: 11, color: 'var(--muted)' }}
+          suppressHydrationWarning
+        >
           {now}
         </div>
         <Link href="/audit-session" className="btn">

@@ -114,7 +114,9 @@ const run = async () => {
         title: 'Referenced requirement — detail not yet loaded',
         status: 'progress',
         owner: userId('Ratna Wijaya'),
-        criticality: 1,
+        // Weight 0: a stub exists so cross-map links resolve, but it has no
+        // evidence of its own and must not move the readiness score.
+        criticality: 0,
       },
     })
     clauseIds.set(s.id, doc.id)

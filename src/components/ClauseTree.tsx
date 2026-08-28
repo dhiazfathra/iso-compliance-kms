@@ -97,7 +97,13 @@ function buildRows(clauses: ClauseNode[], open: Set<string>): Row[] {
   return rows
 }
 
-export function ClauseTree({ clauses, initialOpen }: { clauses: ClauseNode[]; initialOpen: string[] }) {
+export function ClauseTree({
+  clauses,
+  initialOpen,
+}: {
+  clauses: ClauseNode[]
+  initialOpen: string[]
+}) {
   const [open, setOpen] = useState<Set<string>>(new Set(initialOpen))
   const rows = buildRows(clauses, open)
 
@@ -132,7 +138,13 @@ export function ClauseTree({ clauses, initialOpen }: { clauses: ClauseNode[]; in
           type="button"
           className="mono"
           onClick={() => setOpen(expanded ? new Set() : new Set(allKeys()))}
-          style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 11, cursor: 'pointer' }}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--accent)',
+            fontSize: 11,
+            cursor: 'pointer',
+          }}
         >
           {expanded ? 'Collapse all' : 'Expand all'}
         </button>
@@ -158,7 +170,10 @@ export function ClauseTree({ clauses, initialOpen }: { clauses: ClauseNode[]; in
               minWidth: 0,
             }}
           >
-            <span className="mono" style={{ fontSize: 10, color: 'var(--muted)', width: 9, flex: 'none' }}>
+            <span
+              className="mono"
+              style={{ fontSize: 10, color: 'var(--muted)', width: 9, flex: 'none' }}
+            >
               {r.expandable ? (open.has(r.key) ? '−' : '+') : ''}
             </span>
             <span
@@ -233,7 +248,10 @@ export function ClauseTree({ clauses, initialOpen }: { clauses: ClauseNode[]; in
             </span>
             <span>
               {meta && (
-                <span className="chip" style={{ color: meta.color, background: meta.bg, borderColor: meta.border }}>
+                <span
+                  className="chip"
+                  style={{ color: meta.color, background: meta.bg, borderColor: meta.border }}
+                >
                   {meta.label}
                 </span>
               )}

@@ -26,8 +26,13 @@ function StandardCard({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div className="eyebrow">{label}</div>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
-        <div style={{ font: '400 48px/0.92 Inter, sans-serif', letterSpacing: '-0.04em' }}>{score}%</div>
-        <div className="mono" style={{ fontSize: 11.5, lineHeight: 1.4, color: 'var(--muted)', paddingBottom: 7 }}>
+        <div style={{ font: '400 48px/0.92 Inter, sans-serif', letterSpacing: '-0.04em' }}>
+          {score}%
+        </div>
+        <div
+          className="mono"
+          style={{ fontSize: 11.5, lineHeight: 1.4, color: 'var(--muted)', paddingBottom: 7 }}
+        >
           {clauses.length} requirements
           <br />
           {audit}
@@ -40,7 +45,14 @@ function StandardCard({
             title={`${STATUS_META[s].label}: ${n}`}
             style={{
               flex: n,
-              background: s === 'compliant' ? '#21201c' : s === 'progress' ? '#0073e6' : s === 'review' ? 'rgba(168,86,42,.45)' : '#a8562a',
+              background:
+                s === 'compliant'
+                  ? '#21201c'
+                  : s === 'progress'
+                    ? '#0073e6'
+                    : s === 'review'
+                      ? 'rgba(168,86,42,.45)'
+                      : '#a8562a',
             }}
           />
         ))}
@@ -53,7 +65,10 @@ export default async function DashboardPage() {
   const graph = await loadGraph()
   const { clauses, evidence, activity } = graph
 
-  const byStandard = (std: string) => clauses.filter((c) => c.standard === std)
+  // Referenced-only stubs carry weight 0: they exist so cross-map links
+  // resolve, and they must not count as tracked requirements on the dashboard.
+  const tracked = clauses.filter((c) => (c.criticality ?? 1) > 0)
+  const byStandard = (std: string) => tracked.filter((c) => c.standard === std)
 
   // Expiries and reviews come from both clause review dates and evidence
   // expiry dates, so nothing that can lapse is invisible on the dashboard.
@@ -90,11 +105,11 @@ export default async function DashboardPage() {
     ['27001', '9001'].map((std) => ({
       s,
       std,
-      n: clauses.filter((c) => c.status === s && c.standard === std).length,
+      n: tracked.filter((c) => c.status === s && c.standard === std).length,
     })),
   )
 
-  const crossMapped = clauses.filter((c) => crossMapOf(c).length).length
+  const crossMapped = tracked.filter((c) => crossMapOf(c).length).length
 
   return (
     <div className="block">
@@ -111,23 +126,38 @@ export default async function DashboardPage() {
           <div className="eyebrow">Weighted readiness · all standards</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14 }}>
             <div style={{ font: '400 68px/0.92 Inter, sans-serif', letterSpacing: '-0.045em' }}>
-              {readiness(clauses)}%
+              {readiness(tracked)}%
             </div>
           </div>
-          <div style={{ fontSize: 12.5, lineHeight: 1.5, color: 'var(--secondary)', maxWidth: '34ch' }}>
-            Evidence coverage across {clauses.length} tracked requirements, weighted by clause criticality.{' '}
-            {crossMapped} are satisfied by cross-mapped artefacts.
+          <div
+            style={{ fontSize: 12.5, lineHeight: 1.5, color: 'var(--secondary)', maxWidth: '34ch' }}
+          >
+            Evidence coverage across {tracked.length} tracked requirements, weighted by clause
+            criticality. {crossMapped} are satisfied by cross-mapped artefacts.
           </div>
         </div>
         <div style={{ background: 'var(--line)', alignSelf: 'stretch' }} />
-        <StandardCard label="ISO/IEC 27001:2022" clauses={byStandard('27001')} audit="Stage 2 · 14 Oct 2026" />
+        <StandardCard
+          label="ISO/IEC 27001:2022"
+          clauses={byStandard('27001')}
+          audit="Stage 2 · 14 Oct 2026"
+        />
         <div style={{ background: 'var(--line)', alignSelf: 'stretch' }} />
-        <StandardCard label="ISO 9001:2015" clauses={byStandard('9001')} audit="Surveillance · 06 Nov 2026" />
+        <StandardCard
+          label="ISO 9001:2015"
+          clauses={byStandard('9001')}
+          audit="Surveillance · 06 Nov 2026"
+        />
       </section>
 
       <div
         className="stack-mobile"
-        style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 372px', gap: 34, alignItems: 'start' }}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0,1fr) 372px',
+          gap: 34,
+          alignItems: 'start',
+        }}
       >
         <section style={{ display: 'flex', flexDirection: 'column' }}>
           <div className="section-head">
@@ -150,10 +180,20 @@ export default async function DashboardPage() {
                 color: 'var(--ink)',
               }}
             >
-              <span className="mono" style={{ fontSize: 11.5, fontWeight: 500, color: dueColor(x.date) }}>
+              <span
+                className="mono"
+                style={{ fontSize: 11.5, fontWeight: 500, color: dueColor(x.date) }}
+              >
                 {fmtDate(x.date)}
               </span>
-              <span style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span
+                style={{
+                  fontSize: 13,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 {x.name}
               </span>
               <span className="mono" style={{ fontSize: 11, color: 'var(--accent)' }}>
@@ -200,7 +240,10 @@ export default async function DashboardPage() {
                     style={{
                       font: '400 30px/1 Inter, sans-serif',
                       letterSpacing: '-0.035em',
-                      color: STATUS_META[cell.s].color === '#fdfdfc' ? 'var(--warn)' : STATUS_META[cell.s].color,
+                      color:
+                        STATUS_META[cell.s].color === '#fdfdfc'
+                          ? 'var(--warn)'
+                          : STATUS_META[cell.s].color,
                     }}
                   >
                     {cell.n}
@@ -216,7 +259,10 @@ export default async function DashboardPage() {
                     fontWeight: 500,
                     letterSpacing: '.09em',
                     textTransform: 'uppercase',
-                    color: STATUS_META[cell.s].color === '#fdfdfc' ? 'var(--warn)' : STATUS_META[cell.s].color,
+                    color:
+                      STATUS_META[cell.s].color === '#fdfdfc'
+                        ? 'var(--warn)'
+                        : STATUS_META[cell.s].color,
                   }}
                 >
                   {STATUS_META[cell.s].label}

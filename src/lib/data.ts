@@ -79,8 +79,9 @@ export type Graph = {
   activity: { id: number; at: string; actor: string; action: string; ref?: string | null }[]
 }
 
-const rel = <T,>(v: unknown): T | undefined => (v && typeof v === 'object' ? (v as T) : undefined)
-const relId = (v: unknown): number => (v && typeof v === 'object' ? (v as { id: number }).id : Number(v))
+const rel = <T>(v: unknown): T | undefined => (v && typeof v === 'object' ? (v as T) : undefined)
+const relId = (v: unknown): number =>
+  v && typeof v === 'object' ? (v as { id: number }).id : Number(v)
 const clauseCode = (v: unknown): string =>
   v && typeof v === 'object' ? ((v as { clauseId: string }).clauseId ?? '') : String(v ?? '')
 
@@ -214,8 +215,8 @@ export function evidenceCount(c: ClauseNode): number {
 /** Weighted readiness: compliant counts 1, in-progress 0.5, needs-review 0.75. */
 export function readiness(clauses: ClauseNode[]): number {
   const weight: Record<string, number> = { compliant: 1, review: 0.75, progress: 0.5, gap: 0 }
-  const total = clauses.reduce((n, c) => n + (c.criticality || 1), 0)
+  const total = clauses.reduce((n, c) => n + (c.criticality ?? 1), 0)
   if (!total) return 0
-  const got = clauses.reduce((n, c) => n + (c.criticality || 1) * (weight[c.status] ?? 0), 0)
+  const got = clauses.reduce((n, c) => n + (c.criticality ?? 1) * (weight[c.status] ?? 0), 0)
   return Math.round((got / total) * 100)
 }

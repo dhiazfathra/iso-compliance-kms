@@ -13,6 +13,9 @@ export default async function ClausesPage({ searchParams }: { searchParams: Prom
   const needle = q.trim().toLowerCase()
 
   const clauses = graph.clauses.filter((c) => {
+    // Referenced-only stubs (weight 0) stay out of the default tree — they hold
+    // no evidence — but remain findable by searching their clause number.
+    if ((c.criticality ?? 1) === 0 && !needle) return false
     if (std !== 'all' && c.standard !== std) return false
     if (status !== 'all' && c.status !== status) return false
     if (owner && c.owner.name !== owner) return false

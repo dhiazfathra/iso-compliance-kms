@@ -7,7 +7,10 @@ type Counts = { clauses: number; evidence: number; gaps: number }
 
 export function Sidebar({ counts }: { counts: Counts }) {
   const path = usePathname()
-  const groups: { label: string; items: { href: string; label: string; count?: number; tone?: string }[] }[] = [
+  const groups: {
+    label: string
+    items: { href: string; label: string; count?: number; tone?: string }[]
+  }[] = [
     {
       label: 'Workspace',
       items: [
@@ -39,7 +42,13 @@ export function Sidebar({ counts }: { counts: Counts }) {
     <aside className="sidebar">
       <div className="sidebar-head">
         <div className="eyebrow">Dermaster · ISMS</div>
-        <div style={{ marginTop: 9, font: '500 15.5px/1.25 Inter, sans-serif', letterSpacing: '-0.015em' }}>
+        <div
+          style={{
+            marginTop: 9,
+            font: '500 15.5px/1.25 Inter, sans-serif',
+            letterSpacing: '-0.015em',
+          }}
+        >
           Compliance Repository
         </div>
         <div style={{ marginTop: 5, color: 'var(--muted)' }} className="mono">
