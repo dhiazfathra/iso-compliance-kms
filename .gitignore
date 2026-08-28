@@ -34,3 +34,26 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.tokensave
+
+# Ruflo local secrets and runtime data
+.env.local
+.env.*.local
+.claude-flow/data/
+.claude-flow/logs/
+.claude-flow/sessions/
+
+# Codex local configuration
+.codex/
+# Claude Flow runtime data
+# Environment variables
+
+# app
+node_modules/
+.next/
+*.db
+*.db-journal
+.env
+.env.local
+.vercel
+.design/
