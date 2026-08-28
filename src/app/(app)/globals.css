@@ -313,3 +313,47 @@ a:hover {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Matrix cells repeat once per form x clause, so their styling stays in CSS:
+   as inline styles they dominated the page's serialized payload. */
+.mx-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 44px;
+  border-left: 1px solid rgba(33, 32, 28, 0.06);
+}
+
+.mx-mark {
+  width: 9px;
+  height: 9px;
+  background: var(--ink);
+  border: 1px solid var(--ink);
+}
+
+.mx-mark-cross {
+  background: transparent;
+  border-color: var(--accent);
+}
+
+.mx-colhead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 118px;
+  justify-content: flex-end;
+}
+
+.mx-colhead-id {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.mx-colhead-std {
+  font-size: 8.5px;
+  color: var(--muted);
+}

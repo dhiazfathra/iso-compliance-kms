@@ -75,32 +75,9 @@ export default async function MatrixPage() {
               Form · policy
             </span>
             {columns.map((c) => (
-              <span
-                key={c.clauseId}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 6,
-                  height: 118,
-                  justifyContent: 'flex-end',
-                }}
-              >
-                <span
-                  className="mono"
-                  style={{
-                    writingMode: 'vertical-rl',
-                    transform: 'rotate(180deg)',
-                    fontSize: 11,
-                    fontWeight: 500,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {c.clauseId}
-                </span>
-                <span className="mono" style={{ fontSize: 8.5, color: 'var(--muted)' }}>
-                  {c.standard}
-                </span>
+              <span key={c.clauseId} className="mx-colhead">
+                <span className="mono mx-colhead-id">{c.clauseId}</span>
+                <span className="mono mx-colhead-std">{c.standard}</span>
               </span>
             ))}
             <span className="eyebrow" style={{ fontSize: 9.5, paddingLeft: 14, alignSelf: 'end' }}>
@@ -147,24 +124,11 @@ export default async function MatrixPage() {
                 return (
                   <span
                     key={c.clauseId}
-                    title={mark ? `${form.code} → ${c.clauseId} (${mark})` : undefined}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      height: 44,
-                      borderLeft: '1px solid rgba(33,32,28,0.06)',
-                    }}
+                    className="mx-cell"
+                    {...(mark && { title: `${form.code} → ${c.clauseId} (${mark})` })}
                   >
                     {mark && (
-                      <span
-                        style={{
-                          width: 9,
-                          height: 9,
-                          background: mark === 'primary' ? 'var(--ink)' : 'transparent',
-                          border: `1px solid ${mark === 'primary' ? 'var(--ink)' : 'var(--accent)'}`,
-                        }}
-                      />
+                      <span className={mark === 'primary' ? 'mx-mark' : 'mx-mark mx-mark-cross'} />
                     )}
                   </span>
                 )
