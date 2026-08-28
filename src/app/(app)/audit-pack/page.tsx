@@ -128,7 +128,7 @@ export default async function AuditPackPage() {
                 className="row responsive-grid"
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '110px minmax(0,1fr) 120px 110px 96px',
+                  gridTemplateColumns: '96px minmax(0,1fr) 90px 78px 84px',
                   gap: 14,
                   alignItems: 'center',
                   padding: '12px 0',

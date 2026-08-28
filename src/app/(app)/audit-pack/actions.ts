@@ -31,7 +31,7 @@ export async function requestAuditPack() {
     data: {
       packId,
       status: 'building',
-      scope: 'All standards · requirements in scope',
+      scope: 'All standards · in-scope requirements',
       requestedBy: user.id,
       requestedAt: at.toISOString(),
     },
