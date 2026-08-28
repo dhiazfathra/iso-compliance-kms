@@ -89,6 +89,7 @@ src/
   lib/audit-pack.ts   ZIP export: contents, build job and storage sweep
   lib/audit-session.ts  view and download bookkeeping for auditor sessions
   lib/data.ts         loads and assembles the whole compliance graph
+  lib/graph.ts        every derivation of that graph the screens read
   lib/format.ts       dates, due-date colour ramp, status metadata
   migrations/         checked-in schema migrations
   seed/               dataset transcribed from the Claude Design mockup
@@ -98,6 +99,13 @@ The domain model is a strict hierarchy in its primary edges and many-to-many in
 its cross-map edges: a policy has one `primaryClause` and many `clauses`; a form
 has one `policy` and many `alsoSatisfies`; evidence has one `form` and many
 `satisfies`. See [ADR-0004](docs/decisions/0004-clause-hierarchy-and-cross-mapping.md).
+
+Screens read the graph, call a derivation, and render — they do not compute a
+compliance number inline. Readiness, the cross-map, the expiry horizon, the
+owner table, the gap register headline, the matrix and the clause search all
+live in `lib/graph.ts` and are covered by `tests/graph.test.ts`. Anything that
+needs a clock takes `now` as a parameter, so the clock stays out of the render.
+See [ADR-0014](docs/decisions/0014-derivations-live-in-the-graph-module.md).
 
 Decisions are recorded in [`docs/decisions/`](docs/decisions):
 
@@ -114,6 +122,7 @@ Decisions are recorded in [`docs/decisions/`](docs/decisions):
 - [0011](docs/decisions/0011-full-requirement-catalogue.md) — the full requirement catalogue, scored by scope
 - [0012](docs/decisions/0012-audit-pack-export.md) — the audit pack as a real ZIP export
 - [0013](docs/decisions/0013-certification-ready-seed.md) — the seed loads a certification-ready ISMS
+- [0014](docs/decisions/0014-derivations-live-in-the-graph-module.md) — graph derivations live in one tested module
 
 ## Deploying to Vercel
 
