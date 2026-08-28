@@ -1,6 +1,7 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { ACTIVITY, CL, GAPS, PVERS, ROLES, VERS } from './mockup-data'
+import { CATALOG } from './iso-catalog'
 import { placeholderFile } from './placeholder'
 
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || 'admin@dermaster.local'
@@ -79,15 +80,32 @@ const run = async () => {
   // mockup; create stubs for them so the many-to-many links always resolve.
   const clauseIds = new Map<string, number>()
   const seen = new Set(CL.map((c) => c.id))
-  const stubs: { id: string; std: '27001' | '9001' }[] = []
+  const stubs: { id: string; std: '27001' | '9001'; title: string }[] = []
+  // Clause numbers are unique within a standard, not across them: ISO 9001 9.2
+  // (internal audit) and the ISMS's own 9.2 are different requirements with the
+  // same number. The tracked row keeps the bare number; the catalogue entry from
+  // the other standard is namespaced the way cross references already are
+  // ("9001 9.2"), so both exist and both resolve. See ADR-0011.
+  const trackedStandard = new Map(CL.map((c) => [c.id, c.std as '27001' | '9001']))
+  const add = (id: string, std: '27001' | '9001', title: string) => {
+    const clash = trackedStandard.get(id)
+    const key = clash && clash !== std ? `${std} ${id}` : id
+    if (seen.has(key) || stubs.some((s) => s.id === key)) return
+    stubs.push({ id: key, std, title })
+  }
+
+  // The whole catalogue is loaded, not only the requirements this ISMS has
+  // started on, so the tree is the standard rather than a subset of it
+  // (ADR-0011). Catalogue rows carry weight 0 and stay out of the score.
+  for (const entry of CATALOG) add(entry.id, entry.standard, entry.title)
+
+  // A cross reference may still point outside the catalogue; those get a stub
+  // so the many-to-many links always resolve.
   for (const c of CL) {
     for (const p of c.p) {
       for (const f of p.f) {
         for (const x of f.x) {
-          const bare = bareClauseId(x)
-          if (!seen.has(bare) && !stubs.some((s) => s.id === bare)) {
-            stubs.push({ id: bare, std: standardOf(x) })
-          }
+          add(bareClauseId(x), standardOf(x), 'Referenced requirement — outside the catalogue')
         }
       }
     }
@@ -115,11 +133,13 @@ const run = async () => {
       data: {
         clauseId: s.id,
         standard: s.std,
-        title: 'Referenced requirement — detail not yet loaded',
-        status: 'progress',
+        title: s.title,
+        // No policy, form or evidence is filed against it yet, which is what
+        // "gap" means on every other screen.
+        status: 'gap',
         owner: userId('Ratna Wijaya'),
-        // Weight 0: a stub exists so cross-map links resolve, but it has no
-        // evidence of its own and must not move the readiness score.
+        // Weight 0: the requirement is real and visible, but the ISMS has not
+        // taken it into scope, so it must not move the readiness score.
         criticality: 0,
       },
     })

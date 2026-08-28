@@ -17,6 +17,12 @@ const STATUSES = [
   ['gap', 'Gap'],
 ] as const
 
+/** Tracked = in the ISMS scope and scored; catalogue = the rest of the standard. */
+const SCOPES = [
+  ['tracked', 'In scope'],
+  ['all', 'Whole catalogue'],
+] as const
+
 export function ClauseFilters({ resultLabel }: { resultLabel: string }) {
   const router = useRouter()
   const params = useSearchParams()
@@ -24,11 +30,15 @@ export function ClauseFilters({ resultLabel }: { resultLabel: string }) {
 
   const std = params.get('std') ?? 'all'
   const status = params.get('status') ?? 'all'
+  const scope = params.get('scope') ?? 'tracked'
 
   const push = (patch: Record<string, string>) => {
     const next = new URLSearchParams(params.toString())
     for (const [k, v] of Object.entries(patch)) {
-      if (!v || v === 'all') next.delete(k)
+      // `scope` defaults to `tracked`, so `all` is a real value there rather
+      // than the absence of a filter.
+      const isDefault = k === 'scope' ? v === 'tracked' : !v || v === 'all'
+      if (isDefault) next.delete(k)
       else next.set(k, v)
     }
     router.replace(`/clauses?${next.toString()}`, { scroll: false })
@@ -71,6 +81,18 @@ export function ClauseFilters({ resultLabel }: { resultLabel: string }) {
           className="filter-chip"
           data-active={status === value}
           onClick={() => push({ status: value })}
+        >
+          {label}
+        </button>
+      ))}
+      <div style={{ width: 1, height: 22, background: 'var(--line)', margin: '0 4px' }} />
+      {SCOPES.map(([value, label]) => (
+        <button
+          key={value}
+          type="button"
+          className="filter-chip"
+          data-active={scope === value}
+          onClick={() => push({ scope: value })}
         >
           {label}
         </button>

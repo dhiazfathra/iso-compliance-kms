@@ -5,17 +5,18 @@ import { crossMapOf, loadGraph } from '@/lib/data'
 
 export const dynamic = 'force-dynamic'
 
-type Search = { q?: string; std?: string; status?: string; owner?: string }
+type Search = { q?: string; std?: string; status?: string; owner?: string; scope?: string }
 
 export default async function ClausesPage({ searchParams }: { searchParams: Promise<Search> }) {
-  const { q = '', std = 'all', status = 'all', owner = '' } = await searchParams
+  const { q = '', std = 'all', status = 'all', owner = '', scope = 'tracked' } = await searchParams
   const graph = await loadGraph()
   const needle = q.trim().toLowerCase()
 
   const clauses = graph.clauses.filter((c) => {
-    // Referenced-only stubs (weight 0) stay out of the default tree — they hold
-    // no evidence — but remain findable by searching their clause number.
-    if ((c.criticality ?? 1) === 0 && !needle) return false
+    // The whole ISO catalogue is loaded (ADR-0011). The default view is the
+    // requirements this ISMS has taken into scope — weight above 0 — and the
+    // rest are one chip away, or findable by searching for the clause number.
+    if (scope === 'tracked' && (c.criticality ?? 1) === 0 && !needle) return false
     if (std !== 'all' && c.standard !== std) return false
     if (status !== 'all' && c.status !== status) return false
     if (owner && c.owner.name !== owner) return false
@@ -56,7 +57,11 @@ export default async function ClausesPage({ searchParams }: { searchParams: Prom
       <Suspense fallback={<div className="toolbar" />}>
         <ClauseFilters resultLabel={`${clauses.length} of ${graph.clauses.length}`} />
       </Suspense>
-      <ClauseTree key={`${q}-${std}-${status}`} clauses={clauses} initialOpen={initialOpen} />
+      <ClauseTree
+        key={`${q}-${std}-${status}-${scope}`}
+        clauses={clauses}
+        initialOpen={initialOpen}
+      />
     </div>
   )
 }

@@ -106,6 +106,7 @@ Decisions are recorded in [`docs/decisions/`](docs/decisions):
 - [0008](docs/decisions/0008-authentication-and-role-model.md) — authentication and the role model
 - [0009](docs/decisions/0009-external-auditor-sessions.md) — time-boxed external-auditor sessions
 - [0010](docs/decisions/0010-evidence-bytes-served-through-the-app.md) — evidence bytes served through the app
+- [0011](docs/decisions/0011-full-requirement-catalogue.md) — the full requirement catalogue, scored by scope
 
 ## Deploying to Vercel
 

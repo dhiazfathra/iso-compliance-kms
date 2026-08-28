@@ -18,7 +18,10 @@ export default async function AuditSessionPage({
 }) {
   const { clause } = await searchParams
   const graph = await loadGraph()
-  const current = graph.clauses.find((c) => c.clauseId === clause) ?? graph.clauses[0]
+  // Default to a requirement the ISMS actually tracks, not the first row of the
+  // catalogue (ADR-0011).
+  const tracked = graph.clauses.filter((c) => (c.criticality ?? 1) > 0)
+  const current = graph.clauses.find((c) => c.clauseId === clause) ?? tracked[0]
   if (!current) return <div className="block">No requirements loaded.</div>
 
   // The banner below promises the trail; this is where the promise is kept.
@@ -181,16 +184,18 @@ export default async function AuditSessionPage({
         <span className="eyebrow" style={{ width: '100%', paddingBottom: 8 }}>
           Jump to requirement
         </span>
-        {graph.clauses.slice(0, 40).map((c) => (
-          <Link
-            key={c.clauseId}
-            href={`/audit-session?clause=${encodeURIComponent(c.clauseId)}`}
-            className="filter-chip"
-            data-active={c.clauseId === current.clauseId}
-          >
-            {c.clauseId}
-          </Link>
-        ))}
+        {graph.clauses
+          .filter((c) => (c.criticality ?? 1) > 0)
+          .map((c) => (
+            <Link
+              key={c.clauseId}
+              href={`/audit-session?clause=${encodeURIComponent(c.clauseId)}`}
+              className="filter-chip"
+              data-active={c.clauseId === current.clauseId}
+            >
+              {c.clauseId}
+            </Link>
+          ))}
       </div>
     </div>
   )
