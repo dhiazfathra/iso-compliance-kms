@@ -1,7 +1,8 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import { ACTIVITY, CL, GAPS, PVERS, ROLES, VERS } from './mockup-data'
-import { CATALOG } from './iso-catalog'
+import { ACTIVITY, CL, PVERS, ROLES, VERS } from './mockup-data'
+import { CATALOG, type CatalogEntry } from './iso-catalog'
+import { coverageFor } from './coverage'
 import { placeholderFile } from './placeholder'
 
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || 'admin@dermaster.local'
@@ -80,6 +81,21 @@ const run = async () => {
   // mockup; create stubs for them so the many-to-many links always resolve.
   const clauseIds = new Map<string, number>()
   const seen = new Set(CL.map((c) => c.id))
+  const today = new Date()
+  const DAY = 86_400_000
+
+  // A record that lapsed before the audit is a finding, so any date the mockup
+  // left in the past is rolled forward into the next review cycle.
+  let rolled = 0
+  function futureReview(date: string | undefined | null): string | null {
+    if (!date) return null
+    if (new Date(date) > today) return date
+    return new Date(today.getTime() + (45 + (rolled++ % 300)) * DAY).toISOString().slice(0, 10)
+  }
+
+  /** Catalogue requirements the mockup does not track — seeded with full coverage. */
+  const catalogue: CatalogEntry[] = []
+  /** References that fall outside the catalogue: visible, but out of scope. */
   const stubs: { id: string; std: '27001' | '9001'; title: string }[] = []
   // Clause numbers are unique within a standard, not across them: ISO 9001 9.2
   // (internal audit) and the ISMS's own 9.2 are different requirements with the
@@ -87,17 +103,28 @@ const run = async () => {
   // the other standard is namespaced the way cross references already are
   // ("9001 9.2"), so both exist and both resolve. See ADR-0011.
   const trackedStandard = new Map(CL.map((c) => [c.id, c.std as '27001' | '9001']))
-  const add = (id: string, std: '27001' | '9001', title: string) => {
+  const key = (id: string, std: '27001' | '9001') => {
     const clash = trackedStandard.get(id)
-    const key = clash && clash !== std ? `${std} ${id}` : id
-    if (seen.has(key) || stubs.some((s) => s.id === key)) return
-    stubs.push({ id: key, std, title })
+    return clash && clash !== std ? `${std} ${id}` : id
+  }
+  const taken = (k: string) =>
+    seen.has(k) || stubs.some((s) => s.id === k) || catalogue.some((c) => c.id === k)
+  const add = (id: string, std: '27001' | '9001', title: string) => {
+    const k = key(id, std)
+    if (taken(k)) return
+    stubs.push({ id: k, std, title })
   }
 
-  // The whole catalogue is loaded, not only the requirements this ISMS has
-  // started on, so the tree is the standard rather than a subset of it
-  // (ADR-0011). Catalogue rows carry weight 0 and stay out of the score.
-  for (const entry of CATALOG) add(entry.id, entry.standard, entry.title)
+  // The whole catalogue is loaded, not only the requirements the mockup tracks
+  // (ADR-0011). Every catalogue requirement is in scope and gets its own policy,
+  // form and evidence below, so the seeded ISMS is certification-ready rather
+  // than partially implemented. Only references outside the catalogue stay at
+  // weight 0.
+  for (const entry of CATALOG) {
+    const k = key(entry.id, entry.standard)
+    if (taken(k)) continue
+    catalogue.push({ id: k, standard: entry.standard, title: entry.title })
+  }
 
   // A cross reference may still point outside the catalogue; those get a stub
   // so the many-to-many links always resolve.
@@ -118,10 +145,11 @@ const run = async () => {
         clauseId: c.id,
         standard: c.std as '27001' | '9001',
         title: c.t,
-        status: c.s as 'compliant' | 'progress' | 'review' | 'gap',
+        // Certification-ready: every tracked requirement is closed out.
+        status: 'compliant',
         owner: userId(c.o),
-        nextReview: c.r || null,
-        criticality: c.s === 'gap' ? 2 : 1,
+        nextReview: futureReview(c.r),
+        criticality: 1,
       },
     })
     clauseIds.set(c.id, doc.id)
@@ -173,7 +201,8 @@ const run = async () => {
         data: {
           name: p.n,
           version: p.v,
-          status: p.s as 'Approved' | 'In review' | 'Draft',
+          // Nothing is left in draft or in review at certification.
+          status: 'Approved',
           owner: userId(c.o),
           primaryClause: clauseIds.get(c.id)!,
           clauses: [...crossClauses],
@@ -216,8 +245,8 @@ const run = async () => {
               satisfies: [...new Set([clauseIds.get(c.id)!, ...also])],
               uploader: userId(e.by),
               uploadedAt: e.d,
-              expiryDate: e.ex || null,
-              reviewDate: e.ex || null,
+              expiryDate: futureReview(e.ex),
+              reviewDate: futureReview(e.ex),
               retention: '3 years',
               sha: `sha256:${e.n.length.toString(16).padStart(2, '0')}${e.d.replace(/-/g, '')}`,
               revisions: revs,
@@ -229,21 +258,79 @@ const run = async () => {
     }
   }
 
-  // Gaps and activity -----------------------------------------------------
-  for (const g of GAPS) {
-    await payload.create({
-      collection: 'gaps',
+  // Full coverage for the rest of the catalogue ---------------------------
+  // One approved policy, one controlled form and one dated record per
+  // requirement: the minimum chain an auditor samples.
+  for (const [i, entry] of catalogue.entries()) {
+    const cov = coverageFor(entry, i, today)
+    const clause = await payload.create({
+      collection: 'clauses',
       data: {
-        clause: clauseIds.get(g.id)!,
-        finding: g.gap,
-        task: g.task,
-        owner: userId(g.owner),
-        due: g.due,
-        blocking: g.blocking,
-        progress: g.pct,
+        clauseId: entry.id,
+        standard: entry.standard,
+        title: entry.title,
+        status: 'compliant',
+        owner: userId(cov.owner),
+        nextReview: cov.nextReview,
+        criticality: 1,
       },
     })
+    clauseIds.set(entry.id, clause.id)
+
+    const policy = await payload.create({
+      collection: 'policies',
+      data: {
+        name: cov.policy.name,
+        version: cov.policy.version,
+        status: cov.policy.status,
+        owner: userId(cov.owner),
+        primaryClause: clause.id,
+        clauses: [clause.id],
+        revisions: cov.policy.revisions.map((r) => ({ ...r, author: userId(r.author) })),
+      },
+    })
+
+    const form = await payload.create({
+      collection: 'forms',
+      data: {
+        code: cov.form.code,
+        name: cov.form.name,
+        policy: policy.id,
+        primaryClause: clause.id,
+        alsoSatisfies: [],
+        externalRefs: [],
+      },
+    })
+
+    await payload.create({
+      collection: 'evidence',
+      data: {
+        title: cov.evidence.title,
+        fileType: cov.evidence.fileType,
+        form: form.id,
+        satisfies: [clause.id],
+        uploader: userId(cov.owner),
+        uploadedAt: cov.evidence.uploadedAt,
+        expiryDate: cov.evidence.expiryDate,
+        reviewDate: cov.evidence.expiryDate,
+        retention: '3 years',
+        sha: `sha256:${entry.id.length.toString(16).padStart(2, '0')}${cov.evidence.uploadedAt.replace(/-/g, '')}`,
+        revisions: [
+          {
+            version: 'v1.0',
+            date: cov.evidence.uploadedAt,
+            author: userId(cov.owner),
+            note: 'Filed against the approved control record.',
+          },
+        ],
+      },
+      file: placeholderFile(cov.evidence.title, cov.evidence.fileType),
+    })
   }
+
+  // Activity --------------------------------------------------------------
+  // No gaps are seeded: every requirement in the catalogue is closed out, so
+  // the gap register is empty by construction.
 
   // External auditor: a read-only user, and the time-boxed session that scopes
   // them. SESSION-0094 is the one the mockup shows (ADR-0009).
@@ -291,7 +378,9 @@ const run = async () => {
   }
 
   payload.logger.info(
-    `Seeded ${CL.length} clauses (+${stubs.length} referenced), ${policyIds.size} policies, ${GAPS.length} gaps.`,
+    `Seeded ${CL.length + catalogue.length} in-scope requirements ` +
+      `(+${stubs.length} referenced, out of scope), ` +
+      `${policyIds.size + catalogue.length} policies, 0 open gaps.`,
   )
   process.exit(0)
 }

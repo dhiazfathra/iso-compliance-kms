@@ -68,3 +68,6 @@ node_modules/
 .claude/settings.local.json
 ruvector.db
 .env*
+
+# local agent state
+.claude/.headroom_wrap_marker.json

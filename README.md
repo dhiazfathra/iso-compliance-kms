@@ -40,7 +40,10 @@ and `SEED_ADMIN_PASSWORD`).
 | `bun run generate:types` | Regenerate `src/payload-types.ts` from the collections |
 
 `bun run seed` is destructive: it clears clauses, policies, forms, evidence,
-gaps and activity before reloading them.
+gaps and activity before reloading them. What it loads is a
+certification-ready ISMS: all 145 requirements of both standards in scope and
+compliant, each with an approved policy, a controlled form and an in-date
+record, no open gaps, and nothing overdue (ADR-0013).
 
 ## Environment
 
@@ -110,6 +113,7 @@ Decisions are recorded in [`docs/decisions/`](docs/decisions):
 - [0010](docs/decisions/0010-evidence-bytes-served-through-the-app.md) — evidence bytes served through the app
 - [0011](docs/decisions/0011-full-requirement-catalogue.md) — the full requirement catalogue, scored by scope
 - [0012](docs/decisions/0012-audit-pack-export.md) — the audit pack as a real ZIP export
+- [0013](docs/decisions/0013-certification-ready-seed.md) — the seed loads a certification-ready ISMS
 
 ## Deploying to Vercel
 
@@ -149,8 +153,13 @@ trip, not query count.
 ## Known limits
 
 - Pack building holds every evidence file in memory in one function
-  invocation. Fine at this size (29 files, 66 KB zipped); a repository with
+  invocation. Fine at this size (160 files, a few MB zipped); a repository with
   gigabytes of evidence needs streaming or a queue (ADR-0012).
 - The readiness weighting (compliant 1, needs review 0.75, in progress 0.5, gap 0) is a stated assumption, not a customer-supplied formula.
 - Referenced-only clause stubs exist so cross-map links resolve; they carry
-  weight 0 and are excluded from readiness and dashboard counts.
+  weight 0 and are excluded from readiness and dashboard counts. The seeded
+  dataset has none, because every reference lands inside the catalogue.
+- The artefacts covering catalogue requirements are generated from the
+  requirement's title, not written by a compliance officer: the chain is
+  complete and auditable in shape, but the policy text itself is a placeholder
+  (ADR-0013).

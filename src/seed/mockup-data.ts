@@ -261,9 +261,24 @@ export const CL: MockClause[] = [
     p: [
       {
         n: 'Cloud Services Policy',
-        v: 'draft',
-        s: 'Draft',
-        f: [{ n: 'Cloud Service Assessment', c: 'FRM-CLD-01', x: ['A.5.19'], e: [] }],
+        v: 'v1.0',
+        s: 'Approved',
+        f: [
+          {
+            n: 'Cloud Service Assessment',
+            c: 'FRM-CLD-01',
+            x: ['A.5.19'],
+            e: [
+              {
+                n: 'Cloud service assessments — 7 production services.xlsx',
+                ty: 'XLSX',
+                d: '2026-08-14',
+                ex: '2027-08-14',
+                by: 'Andi Prasetyo',
+              },
+            ],
+          },
+        ],
       },
     ],
   },
@@ -551,9 +566,24 @@ export const CL: MockClause[] = [
     p: [
       {
         n: 'Performance Monitoring Procedure',
-        v: 'draft',
-        s: 'Draft',
-        f: [{ n: 'Process KPI Sheet', c: 'FRM-PM-01', x: ['A.8.16'], e: [] }],
+        v: 'v1.0',
+        s: 'Approved',
+        f: [
+          {
+            n: 'Process KPI Sheet',
+            c: 'FRM-PM-01',
+            x: ['A.8.16'],
+            e: [
+              {
+                n: 'Process KPI sheet — Q1-Q2 2026 signed.xlsx',
+                ty: 'XLSX',
+                d: '2026-08-20',
+                ex: '2027-08-20',
+                by: 'Bayu Santoso',
+              },
+            ],
+          },
+        ],
       },
     ],
   },
