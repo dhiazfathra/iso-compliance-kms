@@ -47,13 +47,25 @@ record, no open gaps, and nothing overdue (ADR-0013).
 
 ## Environment
 
-| Variable                | Required    | Purpose                                            |
-| ----------------------- | ----------- | -------------------------------------------------- |
-| `PAYLOAD_SECRET`        | yes         | Signs Payload sessions                             |
-| `DATABASE_URI`          | yes         | `file:./iso-kms.db` locally, `libsql://…` on Turso |
-| `DATABASE_AUTH_TOKEN`   | on Turso    | Turso database token                               |
-| `BLOB_READ_WRITE_TOKEN` | for uploads | Vercel Blob store token                            |
-| `CRON_SECRET`           | on Vercel   | Bearer token the daily audit-pack sweep requires   |
+| Variable                 | Required      | Purpose                                            |
+| ------------------------ | ------------- | -------------------------------------------------- |
+| `PAYLOAD_SECRET`         | yes           | Signs Payload sessions                             |
+| `DATABASE_URI`           | yes           | `file:./iso-kms.db` locally, `libsql://…` on Turso |
+| `DATABASE_AUTH_TOKEN`    | on Turso      | Turso database token                               |
+| `NEXT_PUBLIC_SERVER_URL` | in production | This app's own origin                              |
+| `BLOB_READ_WRITE_TOKEN`  | for uploads   | Vercel Blob store token                            |
+| `CRON_SECRET`            | on Vercel     | Bearer token the daily audit-pack sweep requires   |
+
+`PAYLOAD_SECRET` has no fallback: the app throws at startup without one, because
+a default here would mean signing session cookies with a value published in this
+repository.
+
+`NEXT_PUBLIC_SERVER_URL` is the address the audit-pack build calls back into to
+read evidence bytes, and that call carries the requesting user's session cookie.
+It is therefore read from configuration and never from the request's `Host`
+header. On Vercel the platform's own `VERCEL_PROJECT_PRODUCTION_URL` is used if
+the variable is unset; outside production the request host is accepted as a
+local-development convenience. See ADR-0015.
 
 Without `BLOB_READ_WRITE_TOKEN` the app still builds and runs; evidence records
 carry metadata but no stored file, and the preview panel says so.
@@ -123,12 +135,14 @@ Decisions are recorded in [`docs/decisions/`](docs/decisions):
 - [0012](docs/decisions/0012-audit-pack-export.md) — the audit pack as a real ZIP export
 - [0013](docs/decisions/0013-certification-ready-seed.md) — the seed loads a certification-ready ISMS
 - [0014](docs/decisions/0014-derivations-live-in-the-graph-module.md) — graph derivations live in one tested module
+- [0015](docs/decisions/0015-security-hardening-fail-closed.md) — fail closed, and never trust the request
 
 ## Deploying to Vercel
 
 1. Create a Turso database and a Vercel Blob store.
 2. Set `PAYLOAD_SECRET`, `DATABASE_URI`, `DATABASE_AUTH_TOKEN`,
-   `BLOB_READ_WRITE_TOKEN` and `CRON_SECRET` in the Vercel project. Without
+   `NEXT_PUBLIC_SERVER_URL`, `BLOB_READ_WRITE_TOKEN` and `CRON_SECRET` in the
+   Vercel project. The build fails without `PAYLOAD_SECRET`. Without
    `CRON_SECRET` the daily audit-pack sweep refuses to run and exports are never
    deleted (ADR-0012).
 3. Deploy. `vercel.json` runs `bun run migrate` before `next build`, so the

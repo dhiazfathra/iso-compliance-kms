@@ -50,11 +50,31 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const filename = item.filename ?? item.title
   return new NextResponse(upstream.body, {
-    headers: {
-      'Content-Type': item.mimeType ?? 'application/octet-stream',
-      'Content-Disposition': `${inline ? 'inline' : 'attachment'}; filename="${filename.replace(/"/g, '')}"`,
-      // The bytes are access-controlled, so no shared cache may hold them.
-      'Cache-Control': 'private, no-store',
-    },
+    headers: fileHeaders(item.mimeType, filename, inline),
   })
+}
+
+/**
+ * Types the browser may render in place. Anything else is sent as a download
+ * whatever the caller asked for: the upload allowlist already excludes
+ * scriptable formats, but records predating it still carry their old type, and
+ * these bytes render on our own origin — a stored SVG would be a stored XSS.
+ */
+const INLINE_SAFE = new Set(['application/pdf', 'image/png', 'image/jpeg'])
+
+function fileHeaders(mimeType: string | null | undefined, filename: string, inline: boolean) {
+  const type = mimeType && INLINE_SAFE.has(mimeType) ? mimeType : 'application/octet-stream'
+  const renderable = inline && INLINE_SAFE.has(type)
+  return {
+    'Content-Type': type,
+    // Quotes and control characters would let a filename forge extra header
+    // parameters, or break the response outright.
+    'Content-Disposition': `${renderable ? 'inline' : 'attachment'}; filename="${filename.replace(/[^\w.\-() ]+/g, '_')}"`,
+    // Never let a mislabelled upload be sniffed back into an active type, and
+    // strip every capability from anything that does render.
+    'X-Content-Type-Options': 'nosniff',
+    'Content-Security-Policy': "sandbox; default-src 'none'; object-src 'none'",
+    // The bytes are access-controlled, so no shared cache may hold them.
+    'Cache-Control': 'private, no-store',
+  }
 }

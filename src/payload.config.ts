@@ -21,6 +21,18 @@ const dirname = path.dirname(fileURLToPath(import.meta.url))
 // builds work without one.
 const blobToken = process.env.BLOB_READ_WRITE_TOKEN
 
+/**
+ * Session cookies are signed with this. A fallback here would mean a
+ * deployment that forgot the variable signs its sessions with a value printed
+ * in this repository, so anyone could forge an admin cookie. Fail at boot
+ * instead: an application that cannot sign safely must not start.
+ */
+function requireSecret(): string {
+  const secret = process.env.PAYLOAD_SECRET
+  if (!secret) throw new Error('PAYLOAD_SECRET is not set; refusing to start.')
+  return secret
+}
+
 export default buildConfig({
   admin: { user: Users.slug, importMap: { baseDir: path.resolve(dirname) } },
   collections: [
@@ -35,7 +47,7 @@ export default buildConfig({
     AuditPacks,
   ],
   editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET || 'dev-secret-change-me',
+  secret: requireSecret(),
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
   db: sqliteAdapter({
     client: {

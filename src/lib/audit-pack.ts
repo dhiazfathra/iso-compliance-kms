@@ -21,6 +21,7 @@ const esc = (s: string) =>
  * works offline on the certification body's machine.
  */
 export function packIndexHtml(graph: Graph, packId: string, at: Date): string {
+  const names = evidenceEntryNames(graph)
   const tracked = graph.clauses.filter((c) => (c.criticality ?? 1) > 0)
   const rows = tracked
     .map((c) => {
@@ -31,7 +32,12 @@ export function packIndexHtml(graph: Graph, packId: string, at: Date): string {
               .map(
                 (f) =>
                   `<li>${esc(f.code)} · ${esc(f.name)}<ul>${f.evidence
-                    .map((e) => `<li><a href="evidence/${esc(e.title)}">${esc(e.title)}</a></li>`)
+                    .map(
+                      (e) =>
+                        `<li><a href="evidence/${esc(
+                          encodeURIComponent(names.get(e.id) ?? e.title),
+                        )}">${esc(e.title)}</a></li>`,
+                    )
                     .join('')}</ul></li>`,
               )
               .join('')}</ul></li>`,
@@ -141,7 +147,63 @@ export function packEntries(graph: Graph, packId: string, at: Date): ZipEntry[] 
   ]
 }
 
+/**
+ * The name each evidence file gets inside the ZIP, keyed by evidence id.
+ *
+ * A ZIP entry name is a filename, not a path. Evidence titles are free text, so
+ * a title of `../../.bashrc` would otherwise escape the extraction directory on
+ * the certification body's machine — and two identical titles would silently
+ * collide, delivering a pack whose evidence is not what it claims. Built once
+ * and shared, so the index's links and the stored entries always agree.
+ */
+export function evidenceEntryNames(graph: Graph): Map<number, string> {
+  const taken = new Set<string>()
+  const names = new Map<number, string>()
+
+  for (const item of graph.evidence) {
+    const base = item.title
+      .split(/[\\/]/)
+      .pop()!
+      .replace(/^\.+/, '')
+      .replace(/[^\w.\-() ]+/g, '_')
+    let name = base || 'evidence'
+    if (taken.has(name)) {
+      const dot = name.lastIndexOf('.')
+      const [stem, ext] = dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, '']
+      let n = 2
+      while (taken.has(`${stem} (${n})${ext}`)) n++
+      name = `${stem} (${n})${ext}`
+    }
+    taken.add(name)
+    names.set(item.id, name)
+  }
+
+  return names
+}
+
 export const packPathname = (packId: string) => `${PREFIX}${packId}.zip`
+
+/**
+ * The origin `buildPack` calls back into to read evidence bytes.
+ *
+ * That call carries the requester's session cookie, so the address must never
+ * come from the request: a forged `Host` header would post the cookie to
+ * whoever sent it. Configuration first (`NEXT_PUBLIC_SERVER_URL`), then the
+ * platform's own injected hostname, and only outside production does the
+ * request's host serve as a local-development convenience.
+ */
+export function selfOrigin(requestHost: string | null): string {
+  const configured = process.env.NEXT_PUBLIC_SERVER_URL
+  if (configured) return new URL(configured).origin
+
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL
+  if (vercel) return `https://${vercel}`
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('NEXT_PUBLIC_SERVER_URL is not set; refusing to trust the request host.')
+  }
+  return `http://${requestHost ?? 'localhost:3000'}`
+}
 
 /**
  * Build the ZIP and store it. Runs after the response (`after()`), as the
@@ -168,6 +230,7 @@ export async function buildPack({
     if (!token) throw new Error('No BLOB_READ_WRITE_TOKEN: nowhere to store the pack.')
 
     const entries = packEntries(graph, packId, at)
+    const names = evidenceEntryNames(graph)
     for (const item of graph.evidence) {
       if (!item.url) continue
       const res = await fetch(new URL(`/evidence/${item.id}/download?inline=1`, origin), {
@@ -175,7 +238,7 @@ export async function buildPack({
       })
       if (!res.ok) throw new Error(`Could not read ${item.title} (${res.status}).`)
       entries.push({
-        path: `evidence/${item.title}`,
+        path: `evidence/${names.get(item.id)}`,
         content: Buffer.from(await res.arrayBuffer()),
       })
     }

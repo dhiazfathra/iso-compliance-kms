@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'bun:test'
 import {
   adminOnly,
+  adminOnlyField,
+  safeNext,
   canWrite,
   complianceAccess,
   hasLevel,
@@ -65,5 +67,32 @@ describe('collection access rules', () => {
     expect(userAccess.create(req('write'))).toBe(false)
     expect(userAccess.create(req('admin'))).toBe(true)
     expect(userAccess.delete(req('admin'))).toBe(true)
+  })
+})
+
+describe('adminOnlyField', () => {
+  it('keeps a user from raising their own access level', () => {
+    // The collection lets a user update their own record; this is what stops
+    // that from meaning "may make myself an admin".
+    expect(adminOnlyField(req('read', 7) as never)).toBe(false)
+    expect(adminOnlyField(req('write', 7) as never)).toBe(false)
+    expect(adminOnlyField(req('admin', 7) as never)).toBe(true)
+    expect(adminOnlyField(req(undefined, 7) as never)).toBe(false)
+  })
+})
+
+describe('safeNext', () => {
+  it('keeps a same-site path', () => {
+    expect(safeNext('/evidence/12')).toBe('/evidence/12')
+    expect(safeNext('/clauses?std=27001')).toBe('/clauses?std=27001')
+  })
+
+  it('refuses to send anyone off this origin', () => {
+    expect(safeNext('https://attacker.example')).toBe('/')
+    expect(safeNext('//attacker.example')).toBe('/')
+    expect(safeNext('/\\attacker.example')).toBe('/')
+    expect(safeNext('javascript:alert(1)')).toBe('/')
+    expect(safeNext(undefined)).toBe('/')
+    expect(safeNext('')).toBe('/')
   })
 })

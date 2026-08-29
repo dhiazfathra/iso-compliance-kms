@@ -12,7 +12,11 @@ export const Evidence: CollectionConfig = {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'image/*',
+      // Enumerated, not globbed: `image/*` admits image/svg+xml, which is a
+      // scriptable document, and these bytes are served back inline from our
+      // own origin. The `fileType` field only ever offers PNG and JPG anyway.
+      'image/png',
+      'image/jpeg',
     ],
   },
   admin: {

@@ -8,7 +8,7 @@ import { after } from 'next/server'
 import { requireUser } from '@/lib/auth'
 import { hasLevel } from '@/lib/access'
 import { loadGraph } from '@/lib/data'
-import { buildPack } from '@/lib/audit-pack'
+import { buildPack, selfOrigin } from '@/lib/audit-pack'
 
 /**
  * Request a pack. The row is created and the response returns immediately; the
@@ -50,9 +50,9 @@ export async function requestAuditPack() {
   })
 
   const h = await nextHeaders()
-  const origin = `${h.get('x-forwarded-proto') ?? 'http'}://${h.get('host')}`
   const cookie = h.get('cookie') ?? ''
   const graph = await loadGraph()
+  const origin = selfOrigin(h.get('host'))
 
   after(async () => {
     await buildPack({ packId, graph, origin, cookie })

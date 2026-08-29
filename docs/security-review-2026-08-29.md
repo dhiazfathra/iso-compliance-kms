@@ -30,6 +30,26 @@ git.
 
 ---
 
+## Resolution
+
+All six were fixed in the commit following this report. The reasoning behind
+the fixes is recorded in
+[ADR-0015](decisions/0015-security-hardening-fail-closed.md).
+
+| Finding  | Fix                                                                                |
+| -------- | ---------------------------------------------------------------------------------- |
+| VULN-001 | `PAYLOAD_SECRET` has no fallback; the app throws at startup without one            |
+| VULN-002 | `users.access` carries admin-only field access                                     |
+| VULN-003 | MIME types enumerated not globbed; inline restricted; `nosniff` and sandboxing CSP |
+| VULN-004 | ZIP entry names derived through one shared, sanitised, de-duplicated map           |
+| VULN-005 | Build origin comes from configuration; the request host only outside production    |
+| VULN-006 | `safeNext` accepts same-site paths only                                            |
+
+One step is left to the operator, because it cannot be done from the
+repository: **set `NEXT_PUBLIC_SERVER_URL` in the Vercel project**, and add it
+to your local `.env`. Off Vercel, pack builds throw in production without it.
+`.env.example` should gain a line for it too.
+
 ## Findings
 
 ### [VULN-001] Hardcoded fallback signing secret (Critical)

@@ -1,4 +1,4 @@
-import type { Access } from 'payload'
+import type { Access, FieldAccess } from 'payload'
 
 /**
  * Three roles, stored on `users.access`:
@@ -52,6 +52,20 @@ export const signedIn: Access = async ({ req }) =>
   hasLevel(req.user, 'read') && (await auditSessionOpen(req as never))
 export const canWrite: Access = ({ req }) => hasLevel(req.user, 'write')
 export const adminOnly: Access = ({ req }) => hasLevel(req.user, 'admin')
+
+/** `adminOnly` at field level, for fields a user must not set on their own record. */
+export const adminOnlyField: FieldAccess = ({ req }) => hasLevel(req.user, 'admin')
+
+/**
+ * Where a `?next=` may send someone after signing in: a path on this site and
+ * nothing else. A link that starts on our domain and lands on someone else's is
+ * exactly the shape a phishing page wants, so anything but a plain relative
+ * path falls back to the dashboard.
+ */
+export function safeNext(next: string | undefined): string {
+  if (!next || !next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\')) return '/'
+  return next
+}
 
 /** Read for anyone signed in; every mutation needs `write`, deletes need `admin`. */
 export const complianceAccess = {

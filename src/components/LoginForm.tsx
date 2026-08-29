@@ -3,7 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
-export function LoginForm({ next }: { next?: string }) {
+/** `next` is already validated as a same-site path by the login page. */
+export function LoginForm({ next }: { next: string }) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -20,7 +21,7 @@ export function LoginForm({ next }: { next?: string }) {
     })
     setBusy(false)
     if (!res.ok) return setError('Those credentials were not accepted.')
-    router.replace(next || '/')
+    router.replace(next)
     router.refresh()
   }
 
