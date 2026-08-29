@@ -14,15 +14,6 @@ import type { CatalogEntry } from './iso-catalog'
 
 const DAY = 86_400_000
 
-export const OWNER_POOL = [
-  'Dewi Kartika',
-  'Andi Prasetyo',
-  'Dhiaz Fathra',
-  'Bayu Santoso',
-  'Sari Handayani',
-  'Fajar Nugroho',
-] as const
-
 const FILE_TYPES = ['PDF', 'XLSX', 'DOCX'] as const
 
 /** ISO 9001 clauses are the QMS's; Annex A controls are the ISMS's. */
@@ -65,7 +56,7 @@ export type PolicyRevision = {
  * types and dates deterministically, so re-seeding gives the same result.
  */
 export function coverageFor(entry: CatalogEntry, index: number, today: Date): Coverage {
-  const owner = OWNER_POOL[index % OWNER_POOL.length]
+  const owner = 'Dhiaz Fathra'
   const drafted = new Date(today.getTime() - (330 - (index % 300)) * DAY)
   const approved = new Date(drafted.getTime() + 21 * DAY)
   const uploaded = new Date(today.getTime() - (20 + (index % 120)) * DAY)

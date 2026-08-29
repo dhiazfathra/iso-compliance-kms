@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { CATALOG } from '../src/seed/iso-catalog'
-import { coverageFor, OWNER_POOL } from '../src/seed/coverage'
+import { coverageFor } from '../src/seed/coverage'
 import { CL } from '../src/seed/mockup-data'
 
 const TODAY = new Date('2026-08-28T00:00:00.000Z')
@@ -45,8 +45,8 @@ describe('full-coverage artefacts', () => {
     )
   })
 
-  it('spreads ownership across the named owners and is deterministic', () => {
-    expect(new Set(all.map((c) => c.owner)).size).toBe(OWNER_POOL.length)
+  it('assigns the fixed document owner and is deterministic', () => {
+    expect(all.every((c) => c.owner === 'Dhiaz Fathra')).toBe(true)
     expect(coverageFor(CATALOG[7], 7, TODAY)).toEqual(all[7])
   })
 })
