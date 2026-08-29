@@ -65,7 +65,7 @@ const run = async () => {
     await payload.create({
       collection: 'users',
       data: {
-        name: 'Ratna Wijaya',
+        name: 'Dhiaz Fathra',
         role: 'Compliance Manager',
         email: ADMIN_EMAIL,
         password: ADMIN_PASSWORD,
@@ -165,7 +165,7 @@ const run = async () => {
         // No policy, form or evidence is filed against it yet, which is what
         // "gap" means on every other screen.
         status: 'gap',
-        owner: userId('Ratna Wijaya'),
+        owner: userId('Dhiaz Fathra'),
         // Weight 0: the requirement is real and visible, but the ISMS has not
         // taken it into scope, so it must not move the readiness score.
         criticality: 0,

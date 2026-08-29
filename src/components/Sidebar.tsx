@@ -73,7 +73,7 @@ export function Sidebar({ counts }: { counts: Counts }) {
         ))}
       </nav>
       <div className="sidebar-foot">
-        <div style={{ fontSize: 12.5, fontWeight: 500 }}>Ratna Wijaya</div>
+        <div style={{ fontSize: 12.5, fontWeight: 500 }}>Dhiaz Fathra</div>
         <div className="mono" style={{ fontSize: 10.5, color: 'var(--muted)' }}>
           Compliance Manager · write
         </div>

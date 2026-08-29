@@ -218,7 +218,7 @@ export const CL: MockClause[] = [
     std: '27001',
     t: 'Information security in supplier relationships',
     s: 'compliant',
-    o: 'Ratna Wijaya',
+    o: 'Dhiaz Fathra',
     r: '2027-01-20',
     p: [
       {
@@ -236,14 +236,14 @@ export const CL: MockClause[] = [
                 ty: 'PDF',
                 d: '2026-05-22',
                 ex: '2027-05-22',
-                by: 'Ratna Wijaya',
+                by: 'Dhiaz Fathra',
               },
               {
                 n: 'supplier-scorecard-2026.xlsx',
                 ty: 'XLSX',
                 d: '2026-06-14',
                 ex: '2026-12-14',
-                by: 'Ratna Wijaya',
+                by: 'Dhiaz Fathra',
               },
             ],
           },
@@ -461,7 +461,7 @@ export const CL: MockClause[] = [
     std: '27001',
     t: 'Management review',
     s: 'review',
-    o: 'Ratna Wijaya',
+    o: 'Dhiaz Fathra',
     r: '2026-09-19',
     p: [
       {
@@ -479,7 +479,7 @@ export const CL: MockClause[] = [
                 ty: 'DOCX',
                 d: '2026-02-27',
                 ex: '2026-09-19',
-                by: 'Ratna Wijaya',
+                by: 'Dhiaz Fathra',
               },
               {
                 n: 'kpi-pack-2026H1.pptx',
@@ -499,7 +499,7 @@ export const CL: MockClause[] = [
     std: '9001',
     t: 'Control of externally provided processes, products and services',
     s: 'compliant',
-    o: 'Ratna Wijaya',
+    o: 'Dhiaz Fathra',
     r: '2027-02-11',
     p: [
       {
@@ -517,7 +517,7 @@ export const CL: MockClause[] = [
                 ty: 'XLSX',
                 d: '2026-08-05',
                 ex: '2027-02-11',
-                by: 'Ratna Wijaya',
+                by: 'Dhiaz Fathra',
               },
             ],
           },
@@ -642,7 +642,7 @@ export const ACTIVITY: { t: string; who: string; what: string; ref: string }[] =
   },
   {
     t: '08:20 WIB',
-    who: 'Ratna Wijaya',
+    who: 'Dhiaz Fathra',
     what: 'generated audit pack "Stage 2 · 27001" (48 items, 212 MB)',
     ref: 'PACK-0031',
   },
@@ -741,7 +741,7 @@ export const PVERS: Record<string, MockRevision[]> = {
     {
       v: 'v5.1',
       d: '2026-08-24',
-      by: 'Dewi Kartika',
+      by: 'Dhiaz Fathra',
       appr: 'Approved · awaiting publication',
       s: 'In review',
       note: 'Joiner-mover-leaver timings tightened to 1 business day. MFA mandatory for all remote access.',
@@ -749,7 +749,7 @@ export const PVERS: Record<string, MockRevision[]> = {
     {
       v: 'v5.0',
       d: '2026-02-11',
-      by: 'Dewi Kartika',
+      by: 'Dhiaz Fathra',
       appr: 'Approved by ISMS Committee',
       s: 'Approved',
       note: 'Restructured to 2022 control set. A.5.16 and A.5.18 explicitly referenced.',
@@ -757,7 +757,7 @@ export const PVERS: Record<string, MockRevision[]> = {
     {
       v: 'v4.2',
       d: '2025-08-19',
-      by: 'Andi Prasetyo',
+      by: 'Dhiaz Fathra',
       appr: 'Approved by IT Director',
       s: 'Approved',
       note: 'Privileged access review moved from annual to quarterly.',
@@ -765,7 +765,7 @@ export const PVERS: Record<string, MockRevision[]> = {
     {
       v: 'v4.0',
       d: '2025-01-30',
-      by: 'Dewi Kartika',
+      by: 'Dhiaz Fathra',
       appr: 'Approved by ISMS Committee',
       s: 'Approved',
       note: 'Annual review. No material change.',
@@ -773,7 +773,7 @@ export const PVERS: Record<string, MockRevision[]> = {
     {
       v: 'v3.1',
       d: '2024-03-14',
-      by: 'Dewi Kartika',
+      by: 'Dhiaz Fathra',
       appr: 'Approved by ISMS Committee',
       s: 'Approved',
       note: 'Contractor access section added after finding NC-2024-03.',
@@ -783,7 +783,7 @@ export const PVERS: Record<string, MockRevision[]> = {
     {
       v: 'current',
       d: '2026-06-30',
-      by: 'Dewi Kartika',
+      by: 'Dhiaz Fathra',
       appr: 'Approved by ISMS Committee',
       s: 'Approved',
       note: 'Annual review completed, no material change.',
@@ -791,7 +791,7 @@ export const PVERS: Record<string, MockRevision[]> = {
     {
       v: 'previous',
       d: '2025-06-24',
-      by: 'Dewi Kartika',
+      by: 'Dhiaz Fathra',
       appr: 'Approved by ISMS Committee',
       s: 'Approved',
       note: 'Issued.',
@@ -838,7 +838,7 @@ export const GAPS: MockGap[] = [
     t: 'Management review',
     gap: 'H1 minutes not counter-signed by the Managing Director.',
     task: 'Obtain signature and re-upload FRM-MR-01 evidence',
-    owner: 'Ratna Wijaya',
+    owner: 'Dhiaz Fathra',
     due: '2026-09-19',
     blocking: false,
     pct: 80,
@@ -857,7 +857,7 @@ export const GAPS: MockGap[] = [
 ]
 export const ROLES: Record<string, string> = {
   'Andi Prasetyo': 'IT Administrator',
-  'Ratna Wijaya': 'Compliance Manager',
+  'Dhiaz Fathra': 'Compliance Manager',
   'Dewi Kartika': 'ISMS Lead',
   'Bayu Santoso': 'QA Lead · Internal Auditor',
   'Sari Handayani': 'HR Manager',

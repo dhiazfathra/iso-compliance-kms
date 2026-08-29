@@ -17,7 +17,7 @@ const DAY = 86_400_000
 export const OWNER_POOL = [
   'Dewi Kartika',
   'Andi Prasetyo',
-  'Ratna Wijaya',
+  'Dhiaz Fathra',
   'Bayu Santoso',
   'Sari Handayani',
   'Fajar Nugroho',
@@ -88,7 +88,7 @@ export function coverageFor(entry: CatalogEntry, index: number, today: Date): Co
         {
           version: 'v1.0',
           date: iso(drafted),
-          author: owner,
+          author: 'Dhiaz Fathra',
           approval: 'Drafted',
           status: 'Superseded',
           note: `Initial control statement for ${entry.id}.`,
@@ -96,7 +96,7 @@ export function coverageFor(entry: CatalogEntry, index: number, today: Date): Co
         {
           version: 'v1.1',
           date: iso(new Date(drafted.getTime() + 10 * DAY)),
-          author: 'Ratna Wijaya',
+          author: 'Dhiaz Fathra',
           approval: 'Reviewed by Compliance',
           status: 'Superseded',
           note: 'Review comments incorporated; responsibilities named.',
@@ -104,7 +104,7 @@ export function coverageFor(entry: CatalogEntry, index: number, today: Date): Co
         {
           version: 'v1.2',
           date: iso(approved),
-          author: 'Dewi Kartika',
+          author: 'Dhiaz Fathra',
           approval: 'Approved by Management Representative',
           status: 'Current',
           note: 'Approved and published to the document register.',
