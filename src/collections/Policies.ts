@@ -20,6 +20,14 @@ export const Policies: CollectionConfig = {
       options: ['Approved', 'In review', 'Draft'].map((v) => ({ label: v, value: v })),
     },
     { name: 'owner', type: 'relationship', relationTo: 'users' },
+    {
+      name: 'body',
+      type: 'textarea',
+      admin: {
+        description:
+          'The document text, in Markdown. Rendered on the policy page and exported as the PDF.',
+      },
+    },
     { name: 'primaryClause', type: 'relationship', relationTo: 'clauses', required: true },
     {
       name: 'clauses',

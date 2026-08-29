@@ -72,18 +72,18 @@ carry metadata but no stored file, and the preview panel says so.
 
 ## Screens
 
-| Route                         | What it is for                                                                                                 |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `/`                           | Readiness by standard, requirement counts by status, expiries and reviews due, recent audit trail              |
-| `/clauses`                    | The Clause → Policy → Form → Evidence tree, with search and filters by standard, status and owner              |
-| `/matrix`                     | Cross-map matrix: filled mark = the requirement an artefact was written for, open mark = one it also satisfies |
-| `/evidence`, `/evidence/[id]` | Evidence register, and the record with preview, metadata, clause satisfaction and version history              |
-| `/policies`, `/policies/[id]` | Controlled documents, the forms issued under them, and revision history                                        |
-| `/gaps`                       | Open findings, remediation tasks, owners, progress and due dates                                               |
-| `/owners`                     | Requirement mix per accountable owner                                                                          |
-| `/audit-pack`                 | Export for the certification body: request a ZIP, see past exports, download one                               |
-| `/audit-session`              | Read-only presenting mode: one requirement, large type, whole chain of evidence, live session counters         |
-| `/admin`                      | Payload admin for maintaining the data                                                                         |
+| Route                         | What it is for                                                                                                                                  |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                           | Readiness by standard, requirement counts by status, expiries and reviews due, recent audit trail                                               |
+| `/clauses`                    | The Clause → Policy → Form → Evidence tree, with search and filters by standard, status and owner                                               |
+| `/matrix`                     | Cross-map matrix: filled mark = the requirement an artefact was written for, open mark = one it also satisfies                                  |
+| `/evidence`, `/evidence/[id]` | Evidence register, and the record with preview, metadata, clause satisfaction and version history                                               |
+| `/policies`, `/policies/[id]` | Controlled documents: Markdown document text with an editor and live preview, a PDF download, the forms issued under them, and revision history |
+| `/gaps`                       | Open findings, remediation tasks, owners, progress and due dates                                                                                |
+| `/owners`                     | Requirement mix per accountable owner                                                                                                           |
+| `/audit-pack`                 | Export for the certification body: request a ZIP, see past exports, download one                                                                |
+| `/audit-session`              | Read-only presenting mode: one requirement, large type, whole chain of evidence, live session counters                                          |
+| `/admin`                      | Payload admin for maintaining the data                                                                                                          |
 
 Expiry and review dates use one colour ramp across every screen (due within 30
 days or overdue is warning-coloured), so urgency reads the same everywhere.
@@ -103,6 +103,8 @@ src/
   lib/data.ts         loads and assembles the whole compliance graph
   lib/graph.ts        every derivation of that graph the screens read
   lib/format.ts       dates, due-date colour ramp, status metadata
+  lib/markdown.ts     Markdown parser and HTML renderer for document text
+  lib/pdf.ts          the same document as an A4 PDF
   migrations/         checked-in schema migrations
   seed/               dataset transcribed from the Claude Design mockup
 ```
@@ -136,6 +138,7 @@ Decisions are recorded in [`docs/decisions/`](docs/decisions):
 - [0013](docs/decisions/0013-certification-ready-seed.md) — the seed loads a certification-ready ISMS
 - [0014](docs/decisions/0014-derivations-live-in-the-graph-module.md) — graph derivations live in one tested module
 - [0015](docs/decisions/0015-security-hardening-fail-closed.md) — fail closed, and never trust the request
+- [0016](docs/decisions/0016-markdown-document-text.md) — Markdown document text, rendered and exported in-house
 
 ## Deploying to Vercel
 
@@ -185,4 +188,11 @@ trip, not query count.
 - The artefacts covering catalogue requirements are generated from the
   requirement's title, not written by a compliance officer: the chain is
   complete and auditable in shape, but the policy text itself is a placeholder
-  (ADR-0013).
+  (ADR-0013), written as the Markdown skeleton every controlled document needs.
+- The Markdown subset is the one a controlled document uses: headings,
+  paragraphs, lists, quotes, fenced code, rules, and inline emphasis, code and
+  links. No tables, images, footnotes or raw HTML — a document body can never
+  emit HTML by design (ADR-0016).
+- The PDF is single-column text in Helvetica and Courier, wrapped on average
+  glyph width, and holds no images or clickable links. It is the document text
+  an auditor reads, not a typeset publication (ADR-0016).

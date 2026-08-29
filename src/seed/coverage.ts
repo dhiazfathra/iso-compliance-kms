@@ -33,7 +33,13 @@ const code = (id: string) => id.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g,
 const iso = (d: Date) => d.toISOString().slice(0, 10)
 
 export type Coverage = {
-  policy: { name: string; version: string; status: 'Approved'; revisions: PolicyRevision[] }
+  policy: {
+    name: string
+    version: string
+    status: 'Approved'
+    body: string
+    revisions: PolicyRevision[]
+  }
   form: { code: string; name: string }
   evidence: {
     title: string
@@ -77,6 +83,7 @@ export function coverageFor(entry: CatalogEntry, index: number, today: Date): Co
       name: `${p}-POL-${c} · ${entry.title}`,
       version: 'v1.2',
       status: 'Approved',
+      body: policyBody({ title: entry.title, clauseId: entry.id, owner, version: 'v1.2' }),
       revisions: [
         {
           version: 'v1.0',
@@ -115,4 +122,54 @@ export function coverageFor(entry: CatalogEntry, index: number, today: Date): Co
       expiryDate: iso(expiry),
     },
   }
+}
+
+/**
+ * The Markdown text of a controlled document (ADR-0016). Every seeded policy
+ * carries one so the Markdown viewer, the editor and the PDF export all have
+ * something real to render straight after a seed.
+ */
+export function policyBody(args: {
+  title: string
+  clauseId: string
+  owner: string
+  version: string
+}): string {
+  return [
+    `# ${args.title}`,
+    '',
+    `**Document owner** ${args.owner} · **Version** ${args.version} · **Requirement** ${args.clauseId}`,
+    '',
+    '## 1. Purpose',
+    '',
+    `This document states how the organisation satisfies ${args.clauseId} (${args.title}) and`,
+    'what evidence is produced as a result.',
+    '',
+    '## 2. Scope',
+    '',
+    '- All staff, contractors and third parties acting on behalf of the organisation.',
+    '- All information systems and records within the ISMS and QMS scope statement.',
+    '',
+    '## 3. Policy',
+    '',
+    '1. The control described here is operated at the stated frequency and its output is filed',
+    '   against this document as evidence.',
+    '2. The document owner reviews this text at least annually, and after any incident or change',
+    '   that affects it.',
+    '3. Deviations are raised as a gap, with an owner and a due date, and tracked to closure.',
+    '',
+    '> Records produced under this document are retained for three years unless a longer',
+    '> statutory period applies.',
+    '',
+    '## 4. Responsibilities',
+    '',
+    `- **${args.owner}** — operates and maintains the control.`,
+    '- **Management Representative** — approves this document and its revisions.',
+    '- **Internal audit** — samples the records for effectiveness.',
+    '',
+    '## 5. Related records',
+    '',
+    'The controlled forms listed on this page, and the evidence filed under each of them.',
+    '',
+  ].join('\n')
 }

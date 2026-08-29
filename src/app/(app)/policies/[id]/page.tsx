@@ -1,8 +1,12 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { loadGraph } from '@/lib/data'
+import { currentUser } from '@/lib/auth'
+import { hasLevel } from '@/lib/access'
 import { fmtDate } from '@/lib/format'
 import { CrossMapChips } from '@/components/Badges'
+import { Markdown } from '@/components/Markdown'
+import { MarkdownEditor } from '@/components/MarkdownEditor'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +17,8 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
   if (!policy) notFound()
 
   const clause = graph.clauses.find((c) => c.clauseId === policy.primaryClause)
+  const user = await currentUser()
+  const body = policy.body ?? ''
 
   return (
     <div className="block">
@@ -36,6 +42,22 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
           </Link>{' '}
           {clause?.title}
         </div>
+      </section>
+
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div className="section-head">
+          <span className="eyebrow">Document text</span>
+          <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <a className="btn btn-ghost" href={`/policies/${policy.id}/download`}>
+              Download PDF
+            </a>
+          </span>
+        </div>
+        {hasLevel(user, 'write') ? (
+          <MarkdownEditor id={policy.id} body={body} />
+        ) : (
+          <Markdown source={body} />
+        )}
       </section>
 
       <section style={{ display: 'flex', flexDirection: 'column' }}>

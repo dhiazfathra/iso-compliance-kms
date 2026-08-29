@@ -49,6 +49,8 @@ export type PolicyNode = {
   version: string
   status: string
   owner?: User
+  /** The controlled document text, in Markdown (ADR-0016). */
+  body?: string | null
   primaryClause: string
   clauses: string[]
   revisions: {
@@ -150,6 +152,7 @@ export const loadGraph = cache(async (): Promise<Graph> => {
     version: p.version,
     status: p.status,
     owner: rel<User>(p.owner),
+    body: p.body,
     primaryClause: clauseCode(p.primaryClause),
     clauses: (p.clauses ?? []).map(clauseCode),
     revisions: (p.revisions ?? []).map((r) => ({

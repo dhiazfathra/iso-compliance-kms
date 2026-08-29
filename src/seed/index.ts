@@ -2,7 +2,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { ACTIVITY, CL, PVERS, ROLES, VERS } from './mockup-data'
 import { CATALOG, type CatalogEntry } from './iso-catalog'
-import { coverageFor } from './coverage'
+import { coverageFor, policyBody } from './coverage'
 import { placeholderFile } from './placeholder'
 
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || 'admin@dermaster.local'
@@ -206,6 +206,7 @@ const run = async () => {
           owner: userId(c.o),
           primaryClause: clauseIds.get(c.id)!,
           clauses: [...crossClauses],
+          body: policyBody({ title: p.n, clauseId: c.id, owner: c.o, version: p.v }),
           revisions,
         },
       })
@@ -286,6 +287,7 @@ const run = async () => {
         owner: userId(cov.owner),
         primaryClause: clause.id,
         clauses: [clause.id],
+        body: cov.policy.body,
         revisions: cov.policy.revisions.map((r) => ({ ...r, author: userId(r.author) })),
       },
     })

@@ -270,6 +270,93 @@ a:hover {
   color: var(--muted);
 }
 
+/* Rendered Markdown documents (ADR-0016). Tag selectors, because the HTML is
+   emitted by lib/markdown.ts and carries no classes. */
+.markdown {
+  font-size: 13px;
+  line-height: 1.62;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.markdown > *:first-child {
+  margin-top: 0;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  margin: 22px 0 8px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+.markdown h1 {
+  font-size: 20px;
+}
+.markdown h2 {
+  font-size: 16.5px;
+}
+.markdown h3 {
+  font-size: 14px;
+}
+
+.markdown p,
+.markdown ul,
+.markdown ol {
+  margin: 0 0 10px;
+}
+
+.markdown ul,
+.markdown ol {
+  padding-left: 22px;
+}
+
+.markdown li {
+  margin: 3px 0;
+}
+
+.markdown blockquote {
+  margin: 10px 0;
+  padding: 2px 0 2px 14px;
+  border-left: 2px solid var(--line-strong);
+  color: var(--secondary);
+}
+
+.markdown code {
+  font: 400 11.5px var(--mono);
+  background: rgba(33, 32, 28, 0.05);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.markdown pre {
+  margin: 10px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow-x: auto;
+}
+
+.markdown pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown hr {
+  margin: 18px 0;
+  border: none;
+  border-top: 1px solid var(--line);
+}
+
+.markdown a {
+  color: var(--accent);
+}
+
 /* Responsive ------------------------------------------------------------ */
 @media (max-width: 1080px) {
   .shell {

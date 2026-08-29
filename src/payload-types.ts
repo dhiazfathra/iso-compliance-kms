@@ -195,6 +195,10 @@ export interface Policy {
   version: string
   status: 'Approved' | 'In review' | 'Draft'
   owner?: (number | null) | User
+  /**
+   * The document text, in Markdown. Rendered on the policy page and exported as the PDF.
+   */
+  body?: string | null
   primaryClause: number | Clause
   /**
    * Every requirement this policy satisfies, including cross-mapped ones
@@ -537,6 +541,7 @@ export interface PoliciesSelect<T extends boolean = true> {
   version?: T
   status?: T
   owner?: T
+  body?: T
   primaryClause?: T
   clauses?: T
   revisions?:
