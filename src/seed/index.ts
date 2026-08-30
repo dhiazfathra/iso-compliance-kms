@@ -4,6 +4,7 @@ import { ACTIVITY, CL, PVERS, ROLES, VERS } from './mockup-data'
 import { CATALOG, type CatalogEntry } from './iso-catalog'
 import { coverageFor, policyBody } from './coverage'
 import { placeholderFile } from './placeholder'
+import { DOCUMENTS } from './documents'
 
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || 'admin@dermaster.local'
 const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || 'changeme123'
@@ -328,6 +329,84 @@ const run = async () => {
       },
       file: placeholderFile(cov.evidence.title, cov.evidence.fileType),
     })
+  }
+
+  // Real controlled documents ---------------------------------------------
+  // The organisation's own governance documents (ADR-0017), filed against the
+  // requirement they satisfy with their cross references, revision history and
+  // review dates intact. Everything above gives the register its shape; this is
+  // the text an auditor actually reads.
+  for (const doc of DOCUMENTS) {
+    const primary = clauseIds.get(doc.clause)
+    if (!primary) throw new Error(`${doc.code} maps to unknown requirement ${doc.clause}`)
+
+    const also: number[] = []
+    const externalRefs: { ref: string }[] = []
+    for (const ref of doc.crossRefs) {
+      const id = clauseIds.get(ref) ?? clauseIds.get(bareClauseId(ref))
+      if (id) also.push(id)
+      else externalRefs.push({ ref })
+    }
+
+    const policy = await payload.create({
+      collection: 'policies',
+      data: {
+        name: `${doc.code} · ${doc.title}`,
+        version: doc.version,
+        status: 'Approved',
+        owner: userId(doc.owner),
+        primaryClause: primary,
+        clauses: [...new Set([primary, ...also])],
+        body: doc.body,
+        revisions: doc.revisions.map((r) => ({
+          version: r.version,
+          date: r.date,
+          author: userId(r.author),
+          approval: r.approval,
+          status: r.status,
+          note: r.note,
+        })),
+      },
+    })
+
+    const form = await payload.create({
+      collection: 'forms',
+      data: {
+        code: doc.form.code,
+        name: doc.form.name,
+        policy: policy.id,
+        primaryClause: primary,
+        alsoSatisfies: also,
+        externalRefs,
+      },
+    })
+
+    for (const e of doc.evidence) {
+      await payload.create({
+        collection: 'evidence',
+        data: {
+          title: e.name,
+          fileType: e.fileType,
+          form: form.id,
+          satisfies: [...new Set([primary, ...also])],
+          uploader: userId(e.uploader),
+          uploadedAt: e.uploadedAt,
+          expiryDate: futureReview(e.expiryDate),
+          reviewDate: futureReview(e.expiryDate),
+          retention: '3 years',
+          sha: `sha256:${e.name.length.toString(16).padStart(2, '0')}${e.uploadedAt.replace(/-/g, '')}`,
+          revisions: [
+            {
+              version: doc.version,
+              date: e.uploadedAt,
+              author: userId(e.uploader),
+              note: e.note,
+            },
+          ],
+        },
+        file: placeholderFile(e.name, e.fileType, e.body ?? doc.body),
+      })
+    }
   }
 
   // Activity --------------------------------------------------------------

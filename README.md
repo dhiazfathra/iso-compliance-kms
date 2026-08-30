@@ -107,6 +107,7 @@ src/
   lib/pdf.ts          the same document as an A4 PDF
   migrations/         checked-in schema migrations
   seed/               dataset transcribed from the Claude Design mockup
+  seed/documents/     the organisation's real controlled documents (ADR-0017)
 ```
 
 The domain model is a strict hierarchy in its primary edges and many-to-many in
@@ -139,6 +140,7 @@ Decisions are recorded in [`docs/decisions/`](docs/decisions):
 - [0014](docs/decisions/0014-derivations-live-in-the-graph-module.md) — graph derivations live in one tested module
 - [0015](docs/decisions/0015-security-hardening-fail-closed.md) — fail closed, and never trust the request
 - [0016](docs/decisions/0016-markdown-document-text.md) — Markdown document text, rendered and exported in-house
+- [0017](docs/decisions/0017-real-controlled-documents.md) — the seed loads the organisation's real controlled documents
 
 ## Deploying to Vercel
 
@@ -185,7 +187,13 @@ trip, not query count.
 - Referenced-only clause stubs exist so cross-map links resolve; they carry
   weight 0 and are excluded from readiness and dashboard counts. The seeded
   dataset has none, because every reference lands inside the catalogue.
-- The artefacts covering catalogue requirements are generated from the
+- Eight documents are the organisation's real controlled text — TRD-SEC-002,
+  ENG-SOP-001, CBE/ISMS/SOP/19, the deletion policy, the ADR procedure, the
+  SPACE/DORA framework, the MDM policy and the management review procedure —
+  with their own cross references, revision history and evidence (ADR-0017).
+  They are specific to PT Cakrawala Bumi Estetika and must be replaced by any
+  other organisation reusing this seed.
+- The artefacts covering the other catalogue requirements are generated from the
   requirement's title, not written by a compliance officer: the chain is
   complete and auditable in shape, but the policy text itself is a placeholder
   (ADR-0013), written as the Markdown skeleton every controlled document needs.

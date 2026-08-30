@@ -855,8 +855,23 @@ export const GAPS: MockGap[] = [
     pct: 45,
   },
 ]
+/**
+ * The people who author, review and approve the controlled documents. Named
+ * because a document register whose every row says "Compliance Manager" tells
+ * an auditor nothing about who actually operates the control.
+ */
 export const ROLES: Record<string, string> = {
-  'Dhiaz Fathra': 'Compliance Manager',
+  'Dhiaz Fathra': 'Head of Engineering · ISMS Management Representative',
+  'Aris Ihwan': 'Director · approving authority',
+  Andreas: 'Solutions Architect',
+  Rica: 'Controller representative (personal data)',
+  Randy: 'Backend Engineer · on-call',
+  Wiwin: 'Product & commercial data steward',
+  Tika: 'QA Lead · measurement ETL',
+  Agil: 'Infrastructure Engineer',
+  'Pak Andre': 'Department head — clinic operations',
+  'Pak Chen': 'Department head — supplier and procurement',
+  'Pak Rila': 'Department head — finance',
 }
 export const PACK: { k: string; l: string; meta: string; on: boolean }[] = [
   { k: 'clauses', l: 'Clause index with status and owner', meta: '134 rows · 1 xlsx', on: true },

@@ -37,7 +37,9 @@ export function EvidencePreview({ item }: { item: EvidenceItem }) {
   // URL is public to anyone holding it (ADR-0010).
   const src = `/evidence/${item.id}/download?inline=1`
 
-  if (item.fileType === 'PDF') {
+  // Markdown is text, so it reads in place like a PDF does; the route serves it
+  // as text/plain inside the same sandboxed frame.
+  if (item.fileType === 'PDF' || item.fileType === 'MD') {
     return (
       <iframe
         src={src}

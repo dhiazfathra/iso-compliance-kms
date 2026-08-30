@@ -17,6 +17,9 @@ export const Evidence: CollectionConfig = {
       // own origin. The `fileType` field only ever offers PNG and JPG anyway.
       'image/png',
       'image/jpeg',
+      // Working documents — SOPs, RCAs, ADRs — are kept as Markdown. It is
+      // plain text: nothing in it executes, and the preview renders it as text.
+      'text/markdown',
     ],
   },
   admin: {
@@ -35,7 +38,10 @@ export const Evidence: CollectionConfig = {
       name: 'fileType',
       type: 'select',
       required: true,
-      options: ['PDF', 'XLSX', 'PPTX', 'DOCX', 'PNG', 'JPG'].map((v) => ({ label: v, value: v })),
+      options: ['PDF', 'XLSX', 'PPTX', 'DOCX', 'MD', 'PNG', 'JPG'].map((v) => ({
+        label: v,
+        value: v,
+      })),
     },
     { name: 'form', type: 'relationship', relationTo: 'forms', required: true },
     {

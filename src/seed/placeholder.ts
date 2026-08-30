@@ -1,7 +1,10 @@
 /**
- * The seed has no real documents to load, but `evidence` is an upload
- * collection and Payload validates uploaded bytes against the declared type,
- * so every placeholder has to be a genuinely valid file of its format.
+ * Seeded evidence carries real document text (ADR-0017): the controlled
+ * documents in `documents/` are written into the file itself — Markdown bytes,
+ * Word paragraphs, spreadsheet rows or PDF lines. `evidence` is an upload
+ * collection and Payload validates uploaded bytes against the declared type, so
+ * every file is still a genuinely valid file of its format. A record with no
+ * document text falls back to the one-line placeholder.
  */
 import { zip } from '../lib/zip'
 
@@ -12,12 +15,49 @@ const MIME: Record<string, string> = {
   DOCX: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   PNG: 'image/png',
   JPG: 'image/jpeg',
+  MD: 'text/markdown',
 }
 
-/** A one-page PDF whose only content is the record's own filename. */
-function minimalPdf(text: string): Buffer {
-  const safe = text.replace(/[\\()]/g, '')
-  const content = `BT /F1 12 Tf 60 760 Td (${safe}) Tj ET`
+/** Wraps a line to a fixed width, for the PDF's fixed-width page. */
+function wrap(line: string, width: number): string[] {
+  if (line.length <= width) return [line]
+  const out: string[] = []
+  let current = ''
+  for (const word of line.split(' ')) {
+    if (current && `${current} ${word}`.length > width) {
+      out.push(current)
+      current = word
+    } else current = current ? `${current} ${word}` : word
+  }
+  if (current) out.push(current)
+  return out
+}
+
+const escXml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+/** PDF text is written as latin1, so anything outside it is transliterated. */
+const toLatin1 = (s: string) =>
+  s
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[–—]/g, '-')
+    .replace(/[^\u0020-\u00ff\n]/g, '?')
+
+/** The document text as one Helvetica page, wrapped and truncated to fit. */
+function textPdf(text: string): Buffer {
+  const LINES = 62
+  const lines: string[] = []
+  for (const raw of toLatin1(text).split('\n')) {
+    for (const l of wrap(raw, 92)) lines.push(l)
+    if (lines.length > LINES) break
+  }
+  const shown = lines.slice(0, LINES)
+  if (lines.length > LINES)
+    shown.push('... continues; the full text is on the controlled document.')
+
+  const content = shown
+    .map((l, i) => `BT /F1 10 Tf 50 ${790 - i * 12} Td (${l.replace(/[\\()]/g, '')}) Tj ET`)
+    .join('\n')
   const objects = [
     '<< /Type /Catalog /Pages 2 0 R >>',
     '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
@@ -60,6 +100,36 @@ const rels = (target: string) =>
 const contentTypes = (part: string, type: string) =>
   `${XML}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="${part}" ContentType="${type}"/></Types>`
 
+/**
+ * One spreadsheet row per line of text, one cell per `|`-separated field — the
+ * shape the register extracts are actually kept in.
+ */
+function rows(text: string): string {
+  const COLS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  return text
+    .split('\n')
+    .map((line, r) => {
+      const cells = line
+        .split('|')
+        .map((v, c) =>
+          v.trim()
+            ? `<c r="${COLS[c] ?? 'Z'}${r + 1}" t="inlineStr"><is><t xml:space="preserve">${escXml(v.trim())}</t></is></c>`
+            : '',
+        )
+        .join('')
+      return `<row r="${r + 1}">${cells}</row>`
+    })
+    .join('')
+}
+
+/** One Word paragraph per line, so the document reads as a document. */
+function paragraphs(text: string): string {
+  return text
+    .split('\n')
+    .map((l) => `<w:p><w:r><w:t xml:space="preserve">${escXml(l)}</w:t></w:r></w:p>`)
+    .join('')
+}
+
 function ooxml(kind: 'XLSX' | 'DOCX' | 'PPTX', text: string): Buffer {
   if (kind === 'XLSX') {
     return zip([
@@ -81,7 +151,7 @@ function ooxml(kind: 'XLSX' | 'DOCX' | 'PPTX', text: string): Buffer {
       },
       {
         path: 'xl/worksheets/sheet1.xml',
-        content: `${XML}<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>${text}</t></is></c></row></sheetData></worksheet>`,
+        content: `${XML}<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${rows(text)}</sheetData></worksheet>`,
       },
     ])
   }
@@ -98,7 +168,7 @@ function ooxml(kind: 'XLSX' | 'DOCX' | 'PPTX', text: string): Buffer {
       { path: '_rels/.rels', content: rels('word/document.xml') },
       {
         path: 'word/document.xml',
-        content: `${XML}<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>${text}</w:t></w:r></w:p></w:body></w:document>`,
+        content: `${XML}<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${paragraphs(text)}</w:body></w:document>`,
       },
     ])
   }
@@ -119,13 +189,20 @@ function ooxml(kind: 'XLSX' | 'DOCX' | 'PPTX', text: string): Buffer {
   ])
 }
 
-export function placeholderFile(name: string, fileType: string) {
+/**
+ * The bytes filed for one evidence record. `body` is the document's own text;
+ * without it the file carries a single line naming the record, which is what
+ * the derived coverage artefacts (`coverage.ts`) get.
+ */
+export function placeholderFile(name: string, fileType: string, body?: string) {
   const mimetype = MIME[fileType] ?? 'application/octet-stream'
+  const text = body?.trim() ? body : `Placeholder for ${name}`
   let data: Buffer
-  if (fileType === 'PDF') data = minimalPdf(name)
+  if (fileType === 'PDF') data = textPdf(text)
+  else if (fileType === 'MD') data = Buffer.from(`${text}\n`, 'utf8')
   else if (fileType === 'PNG') data = PNG
   else if (fileType === 'JPG') data = JPG
-  else data = ooxml(fileType as 'XLSX' | 'DOCX' | 'PPTX', `Placeholder for ${name}`)
+  else data = ooxml(fileType as 'XLSX' | 'DOCX' | 'PPTX', text)
 
   return { data, mimetype, name, size: data.length }
 }
