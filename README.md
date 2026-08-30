@@ -195,8 +195,10 @@ trip, not query count.
   other organisation reusing this seed.
 - The artefacts covering the other catalogue requirements are generated from the
   requirement's title, not written by a compliance officer: the chain is
-  complete and auditable in shape, but the policy text itself is a placeholder
-  (ADR-0013), written as the Markdown skeleton every controlled document needs.
+  complete and auditable in shape, but the text is generated (ADR-0013): a
+  Markdown policy skeleton, and a control record naming the form, the operator,
+  the sample, the result and the next due date. No seeded file is an empty stub,
+  and each says in its own text that it is seed data.
 - The Markdown subset is the one a controlled document uses: headings,
   paragraphs, lists, quotes, fenced code, rules, and inline emphasis, code and
   links. No tables, images, footnotes or raw HTML — a document body can never

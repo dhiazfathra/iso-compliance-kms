@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { DOCUMENTS } from '../src/seed/documents'
+import { coverageFor } from '../src/seed/coverage'
 import { CATALOG } from '../src/seed/iso-catalog'
 import { CL } from '../src/seed/mockup-data'
 
@@ -39,6 +40,20 @@ describe('controlled documents', () => {
       expect(dates).toEqual([...dates].sort((a, b) => a - b))
       expect(doc.evidence.length).toBeGreaterThan(0)
       expect(doc.body.length).toBeGreaterThan(500)
+    }
+  })
+
+  test('every derived record carries its own text, not a stub', () => {
+    const today = new Date('2026-08-30')
+    for (const [i, entry] of CATALOG.slice(0, 40).entries()) {
+      const body = coverageFor(entry, i, today).evidence.body
+      expect(body).toContain(entry.id)
+      expect(body).toContain(entry.title)
+      expect(body).toContain('## Result')
+      expect(body.toLowerCase()).not.toContain('placeholder for')
+      // The record has to name who performed it and when it is due again.
+      expect(body).toContain('Performed by')
+      expect(body).toContain('Next due')
     }
   })
 

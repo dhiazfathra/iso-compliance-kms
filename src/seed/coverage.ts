@@ -37,6 +37,8 @@ export type Coverage = {
     fileType: (typeof FILE_TYPES)[number]
     uploadedAt: string
     expiryDate: string
+    /** The record's own text, written into the file. */
+    body: string
   }
   owner: string
   nextReview: string
@@ -111,8 +113,76 @@ export function coverageFor(entry: CatalogEntry, index: number, today: Date): Co
       fileType: FILE_TYPES[index % FILE_TYPES.length],
       uploadedAt: iso(uploaded),
       expiryDate: iso(expiry),
+      body: recordBody({
+        entry,
+        formCode: `FRM-${c}-01`,
+        owner,
+        performed: iso(uploaded),
+        next: iso(nextReview),
+        expiry: iso(expiry),
+        index,
+      }),
     },
   }
+}
+
+/** The people a control record is signed off by, spread deterministically. */
+const OPERATORS = ['Randy', 'Wiwin', 'Tika', 'Agil', 'Rica', 'Andreas'] as const
+
+/**
+ * The text of one filed control record. A record an auditor picks up says what
+ * was checked, over what population, what was found and when it is due again —
+ * so the derived artefacts say that too, rather than naming themselves.
+ */
+export function recordBody(args: {
+  entry: CatalogEntry
+  formCode: string
+  owner: string
+  performed: string
+  next: string
+  expiry: string
+  index: number
+}): string {
+  const { entry, index } = args
+  const operator = OPERATORS[index % OPERATORS.length]
+  const sampled = 8 + (index % 15)
+  const scope = entry.standard === '9001' ? 'the QMS scope' : 'the ISMS scope'
+
+  return [
+    `# ${entry.title} — control record`,
+    '',
+    `**Requirement** ${entry.id} (${entry.standard === '9001' ? 'ISO 9001:2015' : 'ISO/IEC 27001:2022'})`,
+    `**Form** ${args.formCode} · **Performed by** ${operator} · **Reviewed by** ${args.owner}`,
+    `**Performed** ${args.performed} · **Next due** ${args.next} · **Retain until** ${args.expiry}`,
+    '',
+    '## Population and sample',
+    '',
+    `Systems and records inside ${scope} at PT Cakrawala Bumi Estetika: the Eternesia`,
+    'services, the Super App, the marketplace services, and the clinic estate across 13',
+    `locations. ${sampled} items were sampled for this period.`,
+    '',
+    '## What was checked',
+    '',
+    `1. The control stated in the policy for ${entry.id} is operating as written.`,
+    '2. The named owner is still the accountable person, and still has the access the',
+    '   control needs — checked against Zitadel roles.',
+    '3. Records from the previous period were retained for their stated period and no',
+    '   longer.',
+    '',
+    '## Result',
+    '',
+    `- Sampled: ${sampled} · Conforming: ${sampled} · Exceptions: 0`,
+    '- No deviation was found that required a gap to be raised.',
+    '- Evidence produced this period is filed under this form.',
+    '',
+    '## Notes',
+    '',
+    'This record is seed data: the structure, dates and sign-off chain are what the tool',
+    'stores for a real control record, but the sample itself was not drawn from a live',
+    'system. Replace it with the organisation’s own record before an audit.',
+    '',
+    `_Signed_ ${operator} · countersigned ${args.owner}, ${args.performed}`,
+  ].join('\n')
 }
 
 /**

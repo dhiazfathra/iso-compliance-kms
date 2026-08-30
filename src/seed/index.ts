@@ -2,7 +2,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { ACTIVITY, CL, PVERS, ROLES, VERS } from './mockup-data'
 import { CATALOG, type CatalogEntry } from './iso-catalog'
-import { coverageFor, policyBody } from './coverage'
+import { coverageFor, policyBody, recordBody } from './coverage'
 import { placeholderFile } from './placeholder'
 import { DOCUMENTS } from './documents'
 
@@ -253,7 +253,19 @@ const run = async () => {
               sha: `sha256:${e.n.length.toString(16).padStart(2, '0')}${e.d.replace(/-/g, '')}`,
               revisions: revs,
             },
-            file: placeholderFile(e.n, e.ty),
+            file: placeholderFile(
+              e.n,
+              e.ty,
+              recordBody({
+                entry: { id: c.id, title: c.t, standard: c.std as '27001' | '9001' },
+                formCode: f.c,
+                owner: c.o,
+                performed: e.d,
+                next: futureReview(e.ex) ?? e.d,
+                expiry: futureReview(e.ex) ?? e.d,
+                index: e.n.length,
+              }),
+            ),
           })
         }
       }
@@ -327,7 +339,7 @@ const run = async () => {
           },
         ],
       },
-      file: placeholderFile(cov.evidence.title, cov.evidence.fileType),
+      file: placeholderFile(cov.evidence.title, cov.evidence.fileType, cov.evidence.body),
     })
   }
 

@@ -50,8 +50,14 @@ minutes), and a spreadsheet for the registers that are kept as one.
 
 `placeholderFile(name, type, body?)` writes that text into the bytes: Markdown
 verbatim, one Word paragraph per line, one spreadsheet row per line with a cell
-per `|`-separated field, and a wrapped Helvetica page for PDF. A record with no
-document text still gets the one-line placeholder ADR-0007 describes.
+per `|`-separated field, and a wrapped Helvetica page for PDF.
+
+The other 137 requirements do not keep the one-line stub of ADR-0007 either.
+`recordBody()` in `coverage.ts` derives a control record for each — the form it
+was filed on, who performed and countersigned it, the population and sample, the
+result, and when it is next due — so every seeded file reads as a record. It
+says in its own closing note that the sample was not drawn from a live system.
+The stub remains only as the fallback when no text is supplied at all.
 
 `MD` is a new evidence type: `text/markdown` is on the upload allowlist, and the
 download route serves it inline as `text/plain` inside the existing sandboxed
