@@ -2,7 +2,7 @@
 
 Task: verify `/local/import` accepts both `./compliance-pack/` and
 `./compliance-pack.zip`, and that the imported register actually renders.
-Backs the fix in commit `FIXSHA` on top of `6df1ed7`.
+Backs the fix in commit `eda0f2b` on top of `6df1ed7`.
 
 Both cases **failed on the first run** and pass after the fix. The failure and
 its cause are recorded below, because it is the reason this evidence exists.
