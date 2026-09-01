@@ -1,7 +1,5 @@
-import { Suspense } from 'react'
-import { ClauseFilters } from '@/components/ClauseFilters'
-import { ClauseTree } from '@/components/ClauseTree'
-import { filterClauses, loadGraph, openChainKeys, type ClauseFilter } from '@/lib/data'
+import { loadGraph, type ClauseFilter } from '@/lib/data'
+import { ClausesView } from '@/views/clauses'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,19 +11,5 @@ export default async function ClausesPage({
   const { q = '', std = 'all', status = 'all', owner = '', scope = 'tracked' } = await searchParams
   const graph = await loadGraph()
 
-  const clauses = filterClauses(graph.clauses, { q, std, status, owner, scope })
-  const initialOpen = openChainKeys(clauses, !!q.trim())
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      <Suspense fallback={<div className="toolbar" />}>
-        <ClauseFilters resultLabel={`${clauses.length} of ${graph.clauses.length}`} />
-      </Suspense>
-      <ClauseTree
-        key={`${q}-${std}-${status}-${scope}`}
-        clauses={clauses}
-        initialOpen={initialOpen}
-      />
-    </div>
-  )
+  return <ClausesView graph={graph} base="" filter={{ q, std, status, owner, scope }} />
 }

@@ -23,7 +23,7 @@ const SCOPES = [
   ['all', 'Whole catalogue'],
 ] as const
 
-export function ClauseFilters({ resultLabel }: { resultLabel: string }) {
+export function ClauseFilters({ resultLabel, base = '' }: { resultLabel: string; base?: string }) {
   const router = useRouter()
   const params = useSearchParams()
   const [q, setQ] = useState(params.get('q') ?? '')
@@ -41,7 +41,7 @@ export function ClauseFilters({ resultLabel }: { resultLabel: string }) {
       if (isDefault) next.delete(k)
       else next.set(k, v)
     }
-    router.replace(`/clauses?${next.toString()}`, { scroll: false })
+    router.replace(`${base}/clauses?${next.toString()}`, { scroll: false })
   }
 
   // Debounced so typing a clause number does not fire a request per keystroke.

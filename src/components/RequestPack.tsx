@@ -2,9 +2,15 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { requestAuditPack } from '@/app/(app)/audit-pack/actions'
+import type { ActionResult } from '@/views/types'
 
-export function RequestPack({ disabled }: { disabled?: boolean }) {
+export function RequestPack({
+  disabled,
+  onRequest,
+}: {
+  disabled?: boolean
+  onRequest: () => Promise<ActionResult>
+}) {
   const router = useRouter()
   const [pending, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -25,7 +31,7 @@ export function RequestPack({ disabled }: { disabled?: boolean }) {
         disabled={pending}
         onClick={() =>
           start(async () => {
-            const res = await requestAuditPack()
+            const res = await onRequest()
             if (!res?.ok) setError(res?.error ?? 'Could not start the export.')
             // The build finishes after the response; refreshing shows it land.
             setTimeout(() => router.refresh(), 1500)

@@ -44,7 +44,7 @@ const toLatin1 = (s: string) =>
     .replace(/[^\u0020-\u00ff\n]/g, '?')
 
 /** The document text as one Helvetica page, wrapped and truncated to fit. */
-function textPdf(text: string): Buffer {
+function textPdf(text: string): Uint8Array {
   const LINES = 62
   const lines: string[] = []
   for (const raw of toLatin1(text).split('\n')) {
@@ -130,7 +130,7 @@ function paragraphs(text: string): string {
     .join('')
 }
 
-function ooxml(kind: 'XLSX' | 'DOCX' | 'PPTX', text: string): Buffer {
+function ooxml(kind: 'XLSX' | 'DOCX' | 'PPTX', text: string): Uint8Array {
   if (kind === 'XLSX') {
     return zip([
       {
@@ -197,12 +197,15 @@ function ooxml(kind: 'XLSX' | 'DOCX' | 'PPTX', text: string): Buffer {
 export function placeholderFile(name: string, fileType: string, body?: string) {
   const mimetype = MIME[fileType] ?? 'application/octet-stream'
   const text = body?.trim() ? body : `Placeholder for ${name}`
-  let data: Buffer
-  if (fileType === 'PDF') data = textPdf(text)
-  else if (fileType === 'MD') data = Buffer.from(`${text}\n`, 'utf8')
-  else if (fileType === 'PNG') data = PNG
-  else if (fileType === 'JPG') data = JPG
-  else data = ooxml(fileType as 'XLSX' | 'DOCX' | 'PPTX', text)
+  let bytes: Uint8Array
+  if (fileType === 'PDF') bytes = textPdf(text)
+  else if (fileType === 'MD') bytes = Buffer.from(`${text}\n`, 'utf8')
+  else if (fileType === 'PNG') bytes = PNG
+  else if (fileType === 'JPG') bytes = JPG
+  else bytes = ooxml(fileType as 'XLSX' | 'DOCX' | 'PPTX', text)
 
+  // The writers return `Uint8Array` so they also run in the browser; Payload's
+  // upload input wants a Buffer, and this module only ever runs under Node.
+  const data = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength)
   return { data, mimetype, name, size: data.length }
 }

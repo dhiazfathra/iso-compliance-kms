@@ -5,7 +5,11 @@ import { usePathname } from 'next/navigation'
 
 type Counts = { clauses: number; evidence: number; gaps: number }
 
-export function Sidebar({ counts }: { counts: Counts }) {
+/**
+ * `base` is `''` for the hosted app and `'/local'` for local mode, which
+ * renders the same shell over a pack in OPFS.
+ */
+export function Sidebar({ counts, base = '' }: { counts: Counts; base?: string }) {
   const path = usePathname()
   const groups: {
     label: string
@@ -36,7 +40,8 @@ export function Sidebar({ counts }: { counts: Counts }) {
     },
   ]
 
-  const active = (href: string) => (href === '/' ? path === '/' : path.startsWith(href))
+  const href = (to: string) => (to === '/' ? base || '/' : `${base}${to}`)
+  const active = (to: string) => (to === '/' ? path === href('/') : path.startsWith(href(to)))
 
   return (
     <aside className="sidebar">
@@ -60,7 +65,12 @@ export function Sidebar({ counts }: { counts: Counts }) {
           <div className="nav-group" key={g.label}>
             <div className="eyebrow">{g.label}</div>
             {g.items.map((i) => (
-              <Link key={i.href} href={i.href} className="nav-link" data-active={active(i.href)}>
+              <Link
+                key={i.href}
+                href={href(i.href)}
+                className="nav-link"
+                data-active={active(i.href)}
+              >
                 <span>{i.label}</span>
                 {typeof i.count === 'number' && (
                   <span className="nav-count" style={i.tone ? { color: i.tone } : undefined}>

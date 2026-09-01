@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { sessionState } from '@/lib/auth'
 import { safeNext } from '@/lib/access'
@@ -41,6 +42,22 @@ export default async function LoginPage({
             : 'Sign in to read the repository. Every view is written to the audit trail.'}
         </p>
         <LoginForm next={next} />
+        <div
+          style={{
+            borderTop: '1px solid var(--line)',
+            marginTop: 18,
+            paddingTop: 14,
+            fontSize: 12,
+            color: 'var(--muted)',
+            lineHeight: 1.6,
+          }}
+        >
+          No account?{' '}
+          <Link href="/local" className="mono" style={{ fontSize: 11.5 }}>
+            Work offline with a local pack
+          </Link>
+          {' — '}the register is held in this browser and nothing is sent anywhere.
+        </div>
       </div>
     </div>
   )

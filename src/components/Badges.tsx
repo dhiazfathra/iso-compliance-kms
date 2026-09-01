@@ -18,10 +18,13 @@ export function CrossMapChips({
   refs,
   dashed = true,
   max,
+  base = '',
 }: {
   refs: string[]
   dashed?: boolean
   max?: number
+  /** `''` hosted, `'/local'` in local mode. */
+  base?: string
 }) {
   if (!refs.length) return null
   const shown = max ? refs.slice(0, max) : refs
@@ -32,7 +35,7 @@ export function CrossMapChips({
         const known = /^[A-Za-z0-9.]+$/.test(r)
         const cls = `chip-cross${dashed ? ' chip-cross-dashed' : ''}`
         return known ? (
-          <Link key={r} href={`/clauses?q=${encodeURIComponent(r)}`} className={cls}>
+          <Link key={r} href={`${base}/clauses?q=${encodeURIComponent(r)}`} className={cls}>
             {r}
           </Link>
         ) : (

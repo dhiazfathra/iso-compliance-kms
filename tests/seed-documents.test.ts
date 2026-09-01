@@ -43,6 +43,24 @@ describe('controlled documents', () => {
     }
   })
 
+  test('every catalogue requirement has a real controlled document', () => {
+    // `coverage.ts` still exists, but only as the fallback for requirements
+    // outside the catalogue. A stub inside it would silently pass for a
+    // requirement an auditor will ask about by name, so the gate is here.
+    const documented = new Set(DOCUMENTS.map((d) => d.clause))
+    const missing = CATALOG.filter((c) => !documented.has(c.id)).map((c) => c.id)
+    expect(missing).toEqual([])
+  })
+
+  test('no document body is short enough to be a stub', () => {
+    for (const doc of DOCUMENTS) expect(doc.body.length).toBeGreaterThan(1200)
+  })
+
+  test('one document per requirement — no two claim the same clause', () => {
+    const clauses = DOCUMENTS.map((d) => d.clause)
+    expect(new Set(clauses).size).toBe(clauses.length)
+  })
+
   test('every derived record carries its own text, not a stub', () => {
     const today = new Date('2026-08-30')
     for (const [i, entry] of CATALOG.slice(0, 40).entries()) {

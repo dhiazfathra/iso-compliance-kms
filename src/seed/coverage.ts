@@ -76,7 +76,13 @@ export function coverageFor(entry: CatalogEntry, index: number, today: Date): Co
       name: `${p}-POL-${c} · ${entry.title}`,
       version: 'v1.2',
       status: 'Approved',
-      body: policyBody({ title: entry.title, clauseId: entry.id, owner, version: 'v1.2' }),
+      body: policyBody({
+        title: entry.title,
+        clauseId: entry.id,
+        owner,
+        version: 'v1.2',
+        family: controlFamily(entry),
+      }),
       revisions: [
         {
           version: 'v1.0',
@@ -185,6 +191,43 @@ export function recordBody(args: {
   ].join('\n')
 }
 
+/** The control families a policy body can speak to more specifically than the generic skeleton. */
+export type ControlFamily = 'access' | 'cryptography' | 'logging' | 'supplier' | 'hr' | 'general'
+
+/**
+ * Which family a requirement belongs to, by Annex A clause range. ISO 9001
+ * clauses and every Annex A control outside these ranges stay `'general'` —
+ * per ADR-0013 that generic skeleton is enough where an auditor reads the
+ * eight real documents anyway, not this derived text.
+ */
+export function controlFamily(entry: CatalogEntry): ControlFamily {
+  if (entry.standard === '9001') return 'general'
+  const n = Number(entry.id.split('.')[2] ?? entry.id.split('.')[1])
+  if (entry.id.startsWith('A.6')) return 'hr'
+  if (entry.id === 'A.8.24') return 'cryptography'
+  if (entry.id.startsWith('A.8') && n >= 15 && n <= 17) return 'logging'
+  if (entry.id.startsWith('A.5') && n >= 19 && n <= 23) return 'supplier'
+  if (
+    (entry.id.startsWith('A.5') && n >= 15 && n <= 18) ||
+    (entry.id.startsWith('A.8') && n >= 1 && n <= 5)
+  )
+    return 'access'
+  return 'general'
+}
+
+/** One extra, family-specific policy line for section 3 — everything else keeps the generic three. */
+const FAMILY_POLICY_LINE: Record<Exclude<ControlFamily, 'general'>, string> = {
+  access:
+    '4. Access is granted on least privilege and reviewed against the named owner at least quarterly, through Zitadel roles.',
+  cryptography:
+    '4. Keys are customer-managed, rotated on the schedule set by the key policy, and never leave the KMS boundary in the clear.',
+  logging:
+    '4. Logs are retained for the period this document sets, protected from tampering, and reviewed for the events this control names.',
+  supplier:
+    '4. The supplier agreement is on file before service starts, names this control among its obligations, and is reassessed at renewal.',
+  hr: "4. The requirement is applied at the employment lifecycle stage it names — screening, onboarding, change or exit — before the person's access changes.",
+}
+
 /**
  * The Markdown text of a controlled document (ADR-0016). Every seeded policy
  * carries one so the Markdown viewer, the editor and the PDF export all have
@@ -195,7 +238,10 @@ export function policyBody(args: {
   clauseId: string
   owner: string
   version: string
+  family?: ControlFamily
 }): string {
+  const familyLine =
+    args.family && args.family !== 'general' ? FAMILY_POLICY_LINE[args.family] : null
   return [
     `# ${args.title}`,
     '',
@@ -218,6 +264,7 @@ export function policyBody(args: {
     '2. The document owner reviews this text at least annually, and after any incident or change',
     '   that affects it.',
     '3. Deviations are raised as a gap, with an owner and a due date, and tracked to closure.',
+    ...(familyLine ? [familyLine] : []),
     '',
     '> Records produced under this document are retained for three years unless a longer',
     '> statutory period applies.',

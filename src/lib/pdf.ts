@@ -9,6 +9,7 @@
  */
 
 import { inlineText, parseMarkdown, type Block } from './markdown'
+import { fromLatin1, latin1Length, type Bytes } from './bytes'
 
 const PAGE = { width: 595.28, height: 841.89, margin: 56 }
 const BODY_WIDTH = PAGE.width - PAGE.margin * 2
@@ -141,7 +142,7 @@ export function pdfString(text: string): string {
 const FONT = (line: PdfLine) => (line.mono ? '/F3' : line.bold ? '/F2' : '/F1')
 
 /** Lines to a single-column PDF document. `title` becomes the document title. */
-export function pdf(lines: PdfLine[], title: string): Buffer {
+export function pdf(lines: PdfLine[], title: string): Bytes {
   const pages = paginate(lines)
 
   const streams = pages.map((page) =>
@@ -165,19 +166,17 @@ export function pdf(lines: PdfLine[], title: string): Buffer {
     objects.push(
       `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE.width} ${PAGE.height}] /Resources << /Font 3 0 R >> /Contents ${pageIds[i]! + 1} 0 R >>`,
     )
-    objects.push(
-      `<< /Length ${Buffer.byteLength(stream, 'latin1')} >>\nstream\n${stream}\nendstream`,
-    )
+    objects.push(`<< /Length ${latin1Length(stream)} >>\nstream\n${stream}\nendstream`)
   }
   objects.push(`<< /Title (${pdfString(title)}) /Producer (iso-compliance-kms) >>`)
 
   const chunks: string[] = ['%PDF-1.4\n']
   const offsets: number[] = []
-  let offset = Buffer.byteLength(chunks[0]!, 'latin1')
+  let offset = latin1Length(chunks[0]!)
   for (const [i, body] of objects.entries()) {
     const obj = `${i + 1} 0 obj\n${body}\nendobj\n`
     offsets.push(offset)
-    offset += Buffer.byteLength(obj, 'latin1')
+    offset += latin1Length(obj)
     chunks.push(obj)
   }
 
@@ -191,11 +190,11 @@ export function pdf(lines: PdfLine[], title: string): Buffer {
     `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R /Info ${objects.length} 0 R >>\nstartxref\n${offset}\n%%EOF\n`,
   )
 
-  return Buffer.from(chunks.join(''), 'latin1')
+  return fromLatin1(chunks.join(''))
 }
 
 /** A Markdown document as a PDF, with a title block ahead of the body. */
-export function markdownPdf(markdown: string, meta: { title: string; subtitle?: string }): Buffer {
+export function markdownPdf(markdown: string, meta: { title: string; subtitle?: string }): Bytes {
   const head: PdfLine[] = [{ text: meta.title, size: 21, bold: true }]
   if (meta.subtitle) head.push({ text: meta.subtitle, size: 10, spaceBefore: 6 })
   return pdf([...head, ...layout(parseMarkdown(markdown))], meta.title)

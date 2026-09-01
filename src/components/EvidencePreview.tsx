@@ -11,7 +11,7 @@ const OFFICE_HINT: Record<string, string> = {
  * formats — which no browser renders natively — get a labelled card with the
  * download link rather than a broken frame.
  */
-export function EvidencePreview({ item }: { item: EvidenceItem }) {
+export function EvidencePreview({ item, base = '' }: { item: EvidenceItem; base?: string }) {
   const frame: React.CSSProperties = {
     background: 'var(--panel)',
     border: '1px solid var(--line)',
@@ -35,7 +35,7 @@ export function EvidencePreview({ item }: { item: EvidenceItem }) {
 
   // Previews read through the gated route, never the storage URL: a Vercel Blob
   // URL is public to anyone holding it (ADR-0010).
-  const src = `/evidence/${item.id}/download?inline=1`
+  const src = `${base}/evidence/${item.id}/download?inline=1`
 
   // Markdown is text, so it reads in place like a PDF does; the route serves it
   // as text/plain inside the same sandboxed frame.
@@ -82,7 +82,7 @@ export function EvidencePreview({ item }: { item: EvidenceItem }) {
       <span className="mono" style={{ fontSize: 11, color: 'var(--muted)' }}>
         {OFFICE_HINT[item.fileType] ?? 'Binary record'}
       </span>
-      <a href={`/evidence/${item.id}/download`} className="mono" style={{ fontSize: 11.5 }}>
+      <a href={`${base}/evidence/${item.id}/download`} className="mono" style={{ fontSize: 11.5 }}>
         Download to view
       </a>
     </div>

@@ -26,18 +26,19 @@ and `SEED_ADMIN_PASSWORD`).
 
 ## Commands
 
-| Command                  | Description                                            |
-| ------------------------ | ------------------------------------------------------ |
-| `bun run dev`            | Development server                                     |
-| `bun run build`          | Production build (type-checks as part of the build)    |
-| `bun run start`          | Serve the production build                             |
-| `bun run seed`           | Reset and reload the compliance dataset                |
-| `bun run migrate`        | Apply pending schema migrations                        |
-| `bun run migrate:create` | Write a new migration from the current collections     |
-| `bun run migrate:status` | Show which migrations have run                         |
-| `bun run lint`           | ESLint                                                 |
-| `bun run typecheck`      | `tsc --noEmit`                                         |
-| `bun run generate:types` | Regenerate `src/payload-types.ts` from the collections |
+| Command                  | Description                                                    |
+| ------------------------ | -------------------------------------------------------------- |
+| `bun run dev`            | Development server                                             |
+| `bun run build`          | Production build (type-checks as part of the build)            |
+| `bun run start`          | Serve the production build                                     |
+| `bun run seed`           | Reset and reload the compliance dataset                        |
+| `bun run migrate`        | Apply pending schema migrations                                |
+| `bun run migrate:create` | Write a new migration from the current collections             |
+| `bun run migrate:status` | Show which migrations have run                                 |
+| `bun run lint`           | ESLint                                                         |
+| `bun run typecheck`      | `tsc --noEmit`                                                 |
+| `bun run generate:types` | Regenerate `src/payload-types.ts` from the collections         |
+| `bun run export:pack`    | Write the whole register to `./compliance-pack` for local mode |
 
 `bun run seed` is destructive: it clears clauses, policies, forms, evidence,
 gaps and activity before reloading them. What it loads is a
@@ -88,20 +89,47 @@ carry metadata but no stored file, and the preview panel says so.
 Expiry and review dates use one colour ramp across every screen (due within 30
 days or overdue is warning-coloured), so urgency reads the same everywhere.
 
+## Local mode
+
+The whole register can be used with no account and no deployment. `/login`
+offers **Work offline with a local pack**, which leads to `/local`.
+
+```bash
+bun run export:pack   # writes ./compliance-pack
+```
+
+Open `/local/import`, pick the `compliance-pack` folder (or a zip of it) and it
+is parsed in the tab and stored in this browser's private file system (OPFS).
+Nothing is uploaded and no account is involved. Every screen the hosted app has
+is there under `/local`, rendered from the same components: editing a document
+body, filing a new evidence version and generating an audit pack all run
+client-side, and the edit is written back to the stored pack so it survives a
+reload. **Export as zip** on the import screen hands the pack back out, in the
+same format the exporter and the hosted audit pack produce — one format in,
+one format out.
+
+The pack is the database, so it is also the backup: clearing site data for this
+origin deletes it, and the only copy is whatever was last exported.
+
 ## Architecture
 
 ```
 src/
   app/(app)/          audit-facing screens, Server Components
+  app/local/          the same screens with no account, over a pack in OPFS
   app/(payload)/      Payload admin panel and REST/GraphQL routes
   collections/        Payload collection configs (the domain model)
   components/         shared UI: sidebar, clause tree, chips, preview
+  views/              every screen's markup, shared by both route trees
   lib/access.ts       role ranking and every collection's access rules
   lib/auth.ts         session lookup, audit-session expiry, login guard
   lib/audit-pack.ts   ZIP export: contents, build job and storage sweep
   lib/audit-session.ts  view and download bookkeeping for auditor sessions
   lib/data.ts         loads and assembles the whole compliance graph
   lib/graph.ts        every derivation of that graph the screens read
+  lib/local-edit.ts   the edits local mode makes to a register, as pure functions
+  lib/opfs.ts         the pack as this browser stores it
+  lib/pack.ts         the pack format: what is written, and the one parser
   lib/format.ts       dates, due-date colour ramp, status metadata
   lib/markdown.ts     Markdown parser and HTML renderer for document text
   lib/pdf.ts          the same document as an A4 PDF
@@ -141,6 +169,7 @@ Decisions are recorded in [`docs/decisions/`](docs/decisions):
 - [0015](docs/decisions/0015-security-hardening-fail-closed.md) — fail closed, and never trust the request
 - [0016](docs/decisions/0016-markdown-document-text.md) — Markdown document text, rendered and exported in-house
 - [0017](docs/decisions/0017-real-controlled-documents.md) — the seed loads the organisation's real controlled documents
+- [0018](docs/decisions/0018-local-mode-runs-on-a-pack-in-the-browser.md) — local mode runs on a pack held in the browser
 
 ## Deploying to Vercel
 
@@ -181,7 +210,7 @@ trip, not query count.
 ## Known limits
 
 - Pack building holds every evidence file in memory in one function
-  invocation. Fine at this size (160 files, a few MB zipped); a repository with
+  invocation. Fine at this size (202 files, a few MB zipped); a repository with
   gigabytes of evidence needs streaming or a queue (ADR-0012).
 - The readiness weighting (compliant 1, needs review 0.75, in progress 0.5, gap 0) is a stated assumption, not a customer-supplied formula.
 - Referenced-only clause stubs exist so cross-map links resolve; they carry
@@ -193,12 +222,12 @@ trip, not query count.
   with their own cross references, revision history and evidence (ADR-0017).
   They are specific to PT Cakrawala Bumi Estetika and must be replaced by any
   other organisation reusing this seed.
-- The artefacts covering the other catalogue requirements are generated from the
-  requirement's title, not written by a compliance officer: the chain is
-  complete and auditable in shape, but the text is generated (ADR-0013): a
-  Markdown policy skeleton, and a control record naming the form, the operator,
-  the sample, the result and the next due date. No seeded file is an empty stub,
-  and each says in its own text that it is seed data.
+- Every one of the 143 catalogue requirements now has a written controlled
+  document rather than text derived from its title, and a test fails the build
+  if one goes missing or shrinks to a stub. They were drafted for this
+  repository, not supplied by a certification body: they are a credible
+  starting point for an ISMS, not a substitute for one an organisation has
+  actually adopted.
 - The Markdown subset is the one a controlled document uses: headings,
   paragraphs, lists, quotes, fenced code, rules, and inline emphasis, code and
   links. No tables, images, footnotes or raw HTML — a document body can never

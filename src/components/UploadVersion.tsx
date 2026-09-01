@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { uploadNewVersion } from '@/app/(app)/evidence/[id]/actions'
+import type { FormAction } from '@/views/types'
 
-export function UploadVersion({ id }: { id: number }) {
+export function UploadVersion({ id, onUpload }: { id: number; onUpload: FormAction }) {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, start] = useTransition()
@@ -20,7 +20,7 @@ export function UploadVersion({ id }: { id: number }) {
     <form
       action={(fd) =>
         start(async () => {
-          const res = await uploadNewVersion(fd)
+          const res = await onUpload(fd)
           if (res?.ok) setOpen(false)
           else setError(res?.error ?? 'Upload failed.')
         })

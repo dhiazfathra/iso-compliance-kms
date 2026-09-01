@@ -1,10 +1,12 @@
 import { describe, expect, test } from 'bun:test'
 import { placeholderFile } from '../src/seed/placeholder'
-import { zip } from '../src/lib/zip'
+import { unzip, zip } from '../src/lib/zip'
 
 describe('zip', () => {
   test('writes a readable stored archive', async () => {
-    const buf = zip([{ path: 'a/b.txt', content: 'hello' }])
+    // `zip` returns a Uint8Array so it also runs in the browser; wrapped here
+    // only to reach Node's reading helpers.
+    const buf = Buffer.from(zip([{ path: 'a/b.txt', content: 'hello' }]))
     // Local header, central directory and end-of-central-directory signatures.
     expect(buf.readUInt32LE(0)).toBe(0x04034b50)
     expect(buf.includes(Buffer.from('a/b.txt'))).toBe(true)
@@ -70,5 +72,75 @@ describe('placeholderFile', () => {
     )
     expect(docx).toContain('&lt;/w:t&gt;&lt;w:br/&gt; &amp; &lt;script&gt;')
     expect(docx.includes('<script>')).toBe(false)
+  })
+})
+
+describe('unzip', () => {
+  test('reads back what zip wrote, including binary entries', async () => {
+    const bytes = new Uint8Array([0, 1, 2, 255, 0, 128])
+    const read = await unzip(
+      zip([
+        { path: 'a/b.txt', content: 'hello' },
+        { path: 'raw.bin', content: bytes },
+      ]),
+    )
+    expect(read.map((e) => e.path)).toEqual(['a/b.txt', 'raw.bin'])
+    expect(new TextDecoder().decode(read[0]!.bytes)).toBe('hello')
+    expect([...read[1]!.bytes]).toEqual([...bytes])
+  })
+
+  test('reads a deflated archive, which is what most tools produce', async () => {
+    // Our own writer only stores; an archive that arrives from Finder, Windows
+    // Explorer or `zip(1)` is deflated, and must read just the same.
+    const body = 'compliance '.repeat(200)
+    const deflated = new Uint8Array(
+      await new Response(
+        new Blob([body]).stream().pipeThrough(new CompressionStream('deflate-raw')),
+      ).arrayBuffer(),
+    )
+    expect(deflated.length).toBeLessThan(body.length)
+
+    const name = new TextEncoder().encode('notes.txt')
+    const raw = new TextEncoder().encode(body)
+    // Same headers as `zip`, but flagged deflate with the compressed length.
+    const local = new Uint8Array(30 + name.length)
+    const dv = new DataView(local.buffer)
+    dv.setUint32(0, 0x04034b50, true)
+    dv.setUint16(8, 8, true)
+    dv.setUint32(18, deflated.length, true)
+    dv.setUint32(22, raw.length, true)
+    dv.setUint16(26, name.length, true)
+    local.set(name, 30)
+
+    const central = new Uint8Array(46 + name.length)
+    const cv = new DataView(central.buffer)
+    cv.setUint32(0, 0x02014b50, true)
+    cv.setUint16(10, 8, true)
+    cv.setUint32(20, deflated.length, true)
+    cv.setUint32(24, raw.length, true)
+    cv.setUint16(28, name.length, true)
+    cv.setUint32(42, 0, true)
+    central.set(name, 46)
+
+    const end = new Uint8Array(22)
+    const ev = new DataView(end.buffer)
+    ev.setUint32(0, 0x06054b50, true)
+    ev.setUint16(8, 1, true)
+    ev.setUint16(10, 1, true)
+    ev.setUint32(12, central.length, true)
+    ev.setUint32(16, local.length + deflated.length, true)
+
+    const archive = new Uint8Array(local.length + deflated.length + central.length + end.length)
+    archive.set(local, 0)
+    archive.set(deflated, local.length)
+    archive.set(central, local.length + deflated.length)
+    archive.set(end, local.length + deflated.length + central.length)
+
+    const read = await unzip(archive)
+    expect(new TextDecoder().decode(read[0]!.bytes)).toBe(body)
+  })
+
+  test('refuses something that is not an archive', async () => {
+    await expect(unzip(new TextEncoder().encode('not a zip at all'))).rejects.toThrow('Not a ZIP')
   })
 })

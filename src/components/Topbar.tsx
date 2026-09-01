@@ -17,7 +17,14 @@ const TITLES: [RegExp, string, string][] = [
   [/^\/audit-session/, 'Audit session', 'Read-only presenting mirror'],
 ]
 
-export function Topbar({ user }: { user: { name: string; access?: string | null } }) {
+export function Topbar({
+  user,
+  base = '',
+}: {
+  user: { name: string; access?: string | null }
+  /** `''` hosted, `'/local'` in local mode; stripped before the title lookup. */
+  base?: string
+}) {
   const path = usePathname()
   const router = useRouter()
   const [now, setNow] = useState<string>('')
@@ -39,7 +46,8 @@ export function Topbar({ user }: { user: { name: string; access?: string | null 
     return () => clearInterval(id)
   }, [])
 
-  const match = TITLES.find(([re]) => re.test(path))
+  const here = base && path.startsWith(base) ? path.slice(base.length) || '/' : path
+  const match = TITLES.find(([re]) => re.test(here))
   const title = match ? match[1] : 'Compliance Repository'
   const sub = match ? match[2] : ''
 
@@ -75,20 +83,27 @@ export function Topbar({ user }: { user: { name: string; access?: string | null 
           {user.name}
           {user.access === 'read' ? ' · read-only' : ''}
         </span>
-        <Link href="/audit-session" className="btn">
+        <Link href={`${base}/audit-session`} className="btn">
           Audit session
         </Link>
-        <button
-          type="button"
-          className="btn btn-ghost"
-          onClick={async () => {
-            await fetch('/api/users/logout', { method: 'POST' })
-            router.replace('/login')
-            router.refresh()
-          }}
-        >
-          Sign out
-        </button>
+        {base ? (
+          // Local mode has no account to sign out of; the way out is the pack.
+          <Link href={`${base}/import`} className="btn btn-ghost">
+            Manage pack
+          </Link>
+        ) : (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={async () => {
+              await fetch('/api/users/logout', { method: 'POST' })
+              router.replace('/login')
+              router.refresh()
+            }}
+          >
+            Sign out
+          </button>
+        )}
       </div>
     </header>
   )

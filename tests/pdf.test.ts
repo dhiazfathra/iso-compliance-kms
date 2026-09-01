@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { layout, markdownPdf, pdf, pdfString, wrap } from '../src/lib/pdf'
 import { parseMarkdown } from '../src/lib/markdown'
+import { latin1 } from './latin1'
 
 describe('wrap', () => {
   test('breaks on words and never exceeds the printable width', () => {
@@ -42,7 +43,7 @@ describe('pdfString', () => {
 describe('pdf', () => {
   test('writes a valid single-page document', () => {
     const bytes = pdf([{ text: 'Hello', size: 12 }], 'Title (v1)')
-    const src = bytes.toString('latin1')
+    const src = latin1(bytes)
     expect(src.startsWith('%PDF-1.4')).toBe(true)
     expect(src.trimEnd().endsWith('%%EOF')).toBe(true)
     expect(src).toContain('/Type /Catalog')
@@ -52,9 +53,7 @@ describe('pdf', () => {
   })
 
   test('xref offsets point at their objects', () => {
-    const src = markdownPdf('# A\n\nbody', { title: 'A', subtitle: 'v1 · Approved' }).toString(
-      'latin1',
-    )
+    const src = latin1(markdownPdf('# A\n\nbody', { title: 'A', subtitle: 'v1 · Approved' }))
     const offsets = [...src.matchAll(/^(\d{10}) 00000 n $/gm)].map((m) => Number(m[1]))
     expect(offsets.length).toBeGreaterThan(3)
     for (const [i, offset] of offsets.entries()) {
@@ -66,14 +65,14 @@ describe('pdf', () => {
 
   test('paginates a long document', () => {
     const long = Array.from({ length: 400 }, (_, i) => `Paragraph ${i} of the policy.`).join('\n\n')
-    const src = markdownPdf(long, { title: 'Long' }).toString('latin1')
+    const src = latin1(markdownPdf(long, { title: 'Long' }))
     const count = Number(/\/Count (\d+)/.exec(src)![1])
     expect(count).toBeGreaterThan(3)
     expect(src.match(/\/Type \/Page\b/g)).toHaveLength(count)
   })
 
   test('an empty document still produces a titled PDF', () => {
-    const src = markdownPdf('', { title: 'Empty' }).toString('latin1')
+    const src = latin1(markdownPdf('', { title: 'Empty' }))
     expect(src).toContain('(Empty) Tj')
     expect(src).toContain('/Count 1')
   })

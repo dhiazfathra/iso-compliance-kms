@@ -82,6 +82,20 @@ none.
   auditor discounts. Scope is the first thing checked.
 - Rejected.
 
+## Amendment (2026-08-30)
+
+The rejection of hand-written policy text above still stands — full
+control-specific prose for 145 requirements is a consulting deliverable, not a
+seed. What was added instead is narrower: `controlFamily()` in
+`src/seed/coverage.ts` classifies each Annex A control into one of five
+families (access, cryptography, logging, supplier, HR) by clause range, and
+`policyBody()` appends one family-specific policy line where a family applies
+— everything else, including all ISO 9001 clauses, keeps the generic
+three-line skeleton unchanged. This is still derived, still deterministic,
+still not a claim about a real organisation's actual controls; it only makes
+the generic body agree with the kind of control it answers instead of reading
+identically for a backup procedure and a supplier contract.
+
 ## Consequences
 
 - Readiness reads 100% and the dashboard's status mix is one bar. The gap

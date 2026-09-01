@@ -23,7 +23,7 @@ type Row = {
   expandable?: boolean
 }
 
-function buildRows(clauses: ClauseNode[], open: Set<string>): Row[] {
+function buildRows(clauses: ClauseNode[], open: Set<string>, base: string): Row[] {
   const rows: Row[] = []
   for (const c of clauses) {
     const clauseCross = new Set<string>()
@@ -58,7 +58,7 @@ function buildRows(clauses: ClauseNode[], open: Set<string>): Row[] {
         label: p.name,
         meta: p.status,
         cross: p.clauses.filter((x) => x !== c.clauseId),
-        href: `/policies/${p.id}`,
+        href: `${base}/policies/${p.id}`,
         expandable: p.forms.length > 0,
       })
       if (!open.has(pk)) continue
@@ -88,7 +88,7 @@ function buildRows(clauses: ClauseNode[], open: Set<string>): Row[] {
             cross: e.satisfies.filter((x) => x !== c.clauseId),
             review: e.expiryDate,
             owner: e.uploader.name,
-            href: `/evidence/${e.id}`,
+            href: `${base}/evidence/${e.id}`,
           })
         }
       }
@@ -100,12 +100,15 @@ function buildRows(clauses: ClauseNode[], open: Set<string>): Row[] {
 export function ClauseTree({
   clauses,
   initialOpen,
+  base = '',
 }: {
   clauses: ClauseNode[]
   initialOpen: string[]
+  /** `''` hosted, `'/local'` in local mode. */
+  base?: string
 }) {
   const [open, setOpen] = useState<Set<string>>(new Set(initialOpen))
-  const rows = buildRows(clauses, open)
+  const rows = buildRows(clauses, open, base)
 
   const allKeys = () => {
     const keys: string[] = []

@@ -1,15 +1,23 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { savePolicyBody } from '@/app/(app)/policies/[id]/actions'
 import { Markdown } from './Markdown'
+import type { FormAction } from '@/views/types'
 
 /**
  * Write Markdown on the left, read the rendered document on the right. The
  * preview runs through the same renderer as the saved page, so the editor
  * cannot show something the export would not produce.
  */
-export function MarkdownEditor({ id, body }: { id: number; body: string }) {
+export function MarkdownEditor({
+  id,
+  body,
+  onSave,
+}: {
+  id: number
+  body: string
+  onSave: FormAction
+}) {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState(body)
   const [error, setError] = useState<string | null>(null)
@@ -35,7 +43,7 @@ export function MarkdownEditor({ id, body }: { id: number; body: string }) {
     <form
       action={(fd) =>
         start(async () => {
-          const res = await savePolicyBody(fd)
+          const res = await onSave(fd)
           if (res?.ok) setOpen(false)
           else setError(res?.error ?? 'Save failed.')
         })
