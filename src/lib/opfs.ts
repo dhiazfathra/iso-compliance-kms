@@ -11,7 +11,7 @@
  * There is nothing here worth a test that a browser would not have to run.
  */
 import type { Graph } from './data'
-import { parsePack, type PackFile, type ParsedPack } from './pack'
+import { packPrefix, parsePack, safePath, type PackFile, type ParsedPack } from './pack'
 
 const ROOT = 'compliance-pack'
 const MANIFEST = 'graph.json'
@@ -84,10 +84,22 @@ export async function loadStoredPack(): Promise<ParsedPack | undefined> {
   return result.pack
 }
 
-/** Replaces whatever is stored with this pack. */
+/**
+ * Replaces whatever is stored with this pack.
+ *
+ * Paths are stored pack-relative, the same way `parsePack` reads them: a folder
+ * picker reports `compliance-pack/graph.json`, and writing that verbatim under
+ * the OPFS root — which is itself `compliance-pack` — buries the manifest one
+ * level too deep for `loadStoredPack` to ever find it.
+ */
 export async function storePack(files: PackFile[]): Promise<void> {
+  const prefix = packPrefix(files)
   await clear()
-  for (const f of files) await writeFile(f.path, f.bytes)
+  for (const f of files) {
+    if (prefix && !f.path.startsWith(prefix)) continue
+    const rel = safePath(f.path.slice(prefix.length))
+    if (rel) await writeFile(rel, f.bytes)
+  }
 }
 
 /**

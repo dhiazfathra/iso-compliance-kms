@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'bun:test'
-import { PACK_FORMAT_VERSION, packEntries, parsePack, type PackFile } from '../src/lib/pack'
+import {
+  PACK_FORMAT_VERSION,
+  packEntries,
+  packPrefix,
+  parsePack,
+  type PackFile,
+} from '../src/lib/pack'
 import { buildSeedData } from '../src/seed/build'
 import { seedGraph } from '../src/seed/graph'
 import { evidenceEntryNames } from '../src/lib/pack'
@@ -127,5 +133,32 @@ describe('parsePack', () => {
     ])
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error).toContain('readable JSON')
+  })
+})
+
+describe('packPrefix', () => {
+  // storePack writes under an OPFS root already named `compliance-pack`. When
+  // it wrote the picker's paths verbatim the manifest landed at
+  // `compliance-pack/compliance-pack/graph.json`, where loadStoredPack could
+  // not find it and every screen reported an empty register.
+  test('is empty for a pack written at the root', () => {
+    expect(packPrefix(writtenPack())).toBe('')
+  })
+
+  test('is the chosen folder for a pack a folder picker reported', () => {
+    expect(packPrefix(writtenPack('compliance-pack/'))).toBe('compliance-pack/')
+  })
+
+  test('strips to the same pack-relative paths parsePack reads', () => {
+    const prefix = packPrefix(writtenPack('exported/compliance-pack/'))
+    expect(prefix).toBe('exported/compliance-pack/')
+    const relative = writtenPack('exported/compliance-pack/').map((f) =>
+      f.path.slice(prefix.length),
+    )
+    expect(relative).toEqual(writtenPack().map((f) => f.path))
+  })
+
+  test('is empty when there is no manifest at all', () => {
+    expect(packPrefix([{ path: 'notes.txt', bytes: new Uint8Array() }])).toBe('')
   })
 })

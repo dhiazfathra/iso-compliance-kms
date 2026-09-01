@@ -286,12 +286,25 @@ export type ParseResult = { ok: true; pack: ParsedPack } | { ok: false; error: s
  * Rejected rather than sanitised: a pack whose paths had to be rewritten is not
  * the pack its manifest describes, and quietly repairing it would hide that.
  */
-function safePath(path: string): string | undefined {
+export function safePath(path: string): string | undefined {
   if (!path || path.startsWith('/') || /^[a-zA-Z]:/.test(path)) return undefined
   if (path.includes('\\')) return undefined
   const parts = path.split('/')
   if (parts.some((p) => p === '..' || p === '' || p === '.')) return undefined
   return path
+}
+
+/**
+ * Where `graph.json` sits in `input`, as a prefix to strip from every path.
+ *
+ * A folder picker reports paths relative to the folder the user chose, so every
+ * path carries that folder as its first segment; a zip may too, and a pack made
+ * at the root does not. Both readers — the parser and the OPFS writer — have to
+ * agree on where the pack actually starts, so they ask here.
+ */
+export function packPrefix(input: PackFile[]): string {
+  const manifest = input.find((f) => f.path === 'graph.json' || f.path.endsWith('/graph.json'))
+  return manifest ? manifest.path.slice(0, manifest.path.length - 'graph.json'.length) : ''
 }
 
 /**
@@ -302,16 +315,13 @@ function safePath(path: string): string | undefined {
  * folder someone edited by hand, it is read here and nowhere else.
  */
 export function parsePack(input: PackFile[]): ParseResult {
-  // A folder picker reports paths relative to the folder the user chose, so
-  // every path carries that folder as its first segment; a zip does not. Both
-  // are accepted by finding where `graph.json` actually is.
-  const manifestEntry = input.find((f) => f.path === 'graph.json' || f.path.endsWith('/graph.json'))
+  const prefix = packPrefix(input)
+  const manifestEntry = input.find((f) => f.path === `${prefix}graph.json`)
   if (!manifestEntry)
     return {
       ok: false,
       error: 'That folder is not a compliance pack — it has no graph.json at its root.',
     }
-  const prefix = manifestEntry.path.slice(0, manifestEntry.path.length - 'graph.json'.length)
 
   let manifest: PackManifest
   try {
