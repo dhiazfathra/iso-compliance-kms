@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache'
 import { after } from 'next/server'
 import { requireUser } from '@/lib/auth'
 import { hasLevel } from '@/lib/access'
-import { loadGraph } from '@/lib/data'
+import { loadGraphWithBodies } from '@/lib/data'
 import { buildPack, selfOrigin } from '@/lib/audit-pack'
 
 /**
@@ -51,7 +51,9 @@ export async function requestAuditPack() {
 
   const h = await nextHeaders()
   const cookie = h.get('cookie') ?? ''
-  const graph = await loadGraph()
+  // The pack writes every controlled document out as a file, so this is the one
+  // caller that needs the text the other screens no longer carry.
+  const graph = await loadGraphWithBodies()
   const origin = selfOrigin(h.get('host'))
 
   after(async () => {

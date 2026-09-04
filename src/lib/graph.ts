@@ -1,6 +1,24 @@
 import type { ClauseNode, FormNode, Graph, PolicyNode, User } from './data'
 import { daysUntil } from './format'
 
+/**
+ * Groups `items` by the key each one belongs under, in one pass.
+ *
+ * The hierarchy used to be assembled with a `filter` inside a `map`, which is
+ * quadratic: with the full requirement catalogue (ADR-0011) that is clauses ×
+ * policies × forms × evidence comparisons on every render of every screen.
+ */
+export function groupBy<T, K>(items: T[], key: (item: T) => K): Map<K, T[]> {
+  const out = new Map<K, T[]>()
+  for (const item of items) {
+    const k = key(item)
+    const bucket = out.get(k)
+    if (bucket) bucket.push(item)
+    else out.set(k, [item])
+  }
+  return out
+}
+
 /** Every clause a clause's artefacts also satisfy — the cross-map, deduped. */
 export function crossMapOf(c: ClauseNode): string[] {
   const out = new Set<string>()
