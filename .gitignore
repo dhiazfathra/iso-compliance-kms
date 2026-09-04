@@ -78,3 +78,4 @@ graphify-out/
 compliance-pack.zip
 Archive.zip
 .claude/.headroom_wrap_settings.lock
+.claude/security-scans/

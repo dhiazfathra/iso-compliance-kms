@@ -10,6 +10,7 @@
  * asks) or saved straight away.
  */
 import { useEffect, useMemo } from 'react'
+import { canRenderInline } from '@/lib/inline-safe'
 
 export function Deliver({
   bytes,
@@ -22,6 +23,9 @@ export function Deliver({
   type: string
   inline: boolean
 }) {
+  // A blob: URL runs on this origin, so local mode enforces the same list the
+  // hosted route does. There is no server here to do it for us.
+  const renderable = inline && canRenderInline(type)
   const url = useMemo(() => {
     const blob = new Blob([bytes as BlobPart], { type })
     return URL.createObjectURL(blob)
@@ -30,14 +34,14 @@ export function Deliver({
   useEffect(() => () => URL.revokeObjectURL(url), [url])
 
   useEffect(() => {
-    if (inline) return
+    if (renderable) return
     const a = document.createElement('a')
     a.href = url
     a.download = filename
     a.click()
-  }, [url, filename, inline])
+  }, [url, filename, renderable])
 
-  if (inline)
+  if (renderable)
     return (
       <iframe
         src={url}

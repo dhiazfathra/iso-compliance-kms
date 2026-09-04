@@ -45,5 +45,11 @@
   },
   "trustedDependencies": [
     "unrs-resolver"
-  ]
+  ],
+  "overrides": {
+    "dompurify": "^3.4.14"
+  },
+  "resolutions": {
+    "dompurify": "^3.4.14"
+  }
 }

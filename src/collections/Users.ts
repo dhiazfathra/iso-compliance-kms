@@ -5,7 +5,19 @@ export const Users: CollectionConfig = {
   slug: 'users',
   access: userAccess,
   admin: { useAsTitle: 'name', defaultColumns: ['name', 'role', 'email'] },
-  auth: true,
+  /**
+   * Stated rather than left to the framework's defaults, because these are the
+   * numbers the certification body asks for: an account locks after five bad
+   * passwords for ten minutes (online guessing is not viable), and a session
+   * cookie lives eight hours — one working day — so a stolen cookie expires
+   * with the shift rather than lingering for a month.
+   */
+  auth: {
+    maxLoginAttempts: 5,
+    lockTime: 10 * 60 * 1000,
+    tokenExpiration: 8 * 60 * 60,
+    cookies: { sameSite: 'Lax', secure: process.env.NODE_ENV === 'production' },
+  },
   fields: [
     { name: 'name', type: 'text', required: true },
     {
