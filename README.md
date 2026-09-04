@@ -71,6 +71,13 @@ local-development convenience. See ADR-0015.
 Without `BLOB_READ_WRITE_TOKEN` the app still builds and runs; evidence records
 carry metadata but no stored file, and the preview panel says so.
 
+Signing in locks an account for ten minutes after five failed attempts, and a
+session cookie expires after eight hours. Every response carries `nosniff`,
+`X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`,
+HSTS and a closed `Permissions-Policy`; the two download routes add their own
+sandboxing `Content-Security-Policy` on top. See
+[ADR-0019](docs/decisions/0019-security-review-round-two.md).
+
 ## Screens
 
 | Route                         | What it is for                                                                                                                                  |
@@ -170,6 +177,8 @@ Decisions are recorded in [`docs/decisions/`](docs/decisions):
 - [0016](docs/decisions/0016-markdown-document-text.md) — Markdown document text, rendered and exported in-house
 - [0017](docs/decisions/0017-real-controlled-documents.md) — the seed loads the organisation's real controlled documents
 - [0018](docs/decisions/0018-local-mode-runs-on-a-pack-in-the-browser.md) — local mode runs on a pack held in the browser
+- [0019](docs/decisions/0019-security-review-round-two.md) — one security rule, enforced at every door
+- [0020](docs/decisions/0020-the-graph-carries-only-what-a-screen-reads.md) — the whole-graph load carries only what a screen reads
 
 ## Deploying to Vercel
 
