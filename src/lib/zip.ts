@@ -131,7 +131,13 @@ export async function unzip(archive: Uint8Array): Promise<ZipRead[]> {
     const extraLength = readU16(archive, at + 30)
     const commentLength = readU16(archive, at + 32)
     const localAt = readU32(archive, at + 42)
-    const path = new TextDecoder().decode(archive.subarray(at + 46, at + 46 + nameLength))
+    // ZIP names are defined to use `/`. Some Windows tools write `\\` anyway,
+    // and the pack parser rejects a backslash outright as a traversal risk, so
+    // the separator is normalised here where the archive is decoded rather than
+    // loosening the check that guards the manifest.
+    const path = new TextDecoder()
+      .decode(archive.subarray(at + 46, at + 46 + nameLength))
+      .replace(/\\/g, '/')
     at += 46 + nameLength + extraLength + commentLength
 
     // The local header repeats the name and extra fields, and its extra field
