@@ -34,7 +34,7 @@ npx --yes agent-browser console
 
 Injection confirmed on `<body>`:
 
-```
+```text
 "should-still-warn"
 ```
 
@@ -42,7 +42,7 @@ Injection confirmed on `<body>`:
 
 Console output, verbatim:
 
-```
+```text
 [info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
 [log] [HMR] connected
 [error] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
@@ -84,7 +84,7 @@ It can also happen if the client has a browser extension installed which messes 
 The decisive detail is in React's element diff, which shows the flag being
 honoured on the root while the child mismatch is still reported:
 
-```
+```text
 <html lang="en" className="inter_dfa4..." suppressHydrationWarning={true}
   <body
     data-negative-control="should-still-warn"

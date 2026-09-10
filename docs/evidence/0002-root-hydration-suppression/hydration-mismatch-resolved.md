@@ -51,7 +51,7 @@ git worktree add --detach /tmp/after  886d61a   # the fix
 `node_modules` must be a real directory in each worktree. Symlinking it to the
 main checkout fails — Turbopack rejects it outright:
 
-```
+```text
 Error [TurbopackInternalError]: Symlink [project]/node_modules is invalid, it points out of the filesystem root
 ```
 
@@ -84,13 +84,13 @@ npx --yes agent-browser console
 
 The injection landed — the attribute is on `<html>`:
 
-```
+```text
 "<html lang=\"en\" class=\"inter_dfa45f92-module__ig9XPW__variable jetbrains_mono_70b60163-module__7Ns5vW__variable\" data-google-analytics-opt-out=\"\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-wi"
 ```
 
 Console output, verbatim:
 
-```
+```text
 [info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
 [log] [HMR] connected
 [error] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
@@ -151,13 +151,13 @@ npx --yes agent-browser console
 The attribute is still being injected — this is not a case of the simulation
 having stopped working:
 
-```
+```text
 true
 ```
 
 Console output, verbatim:
 
-```
+```text
 [info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
 [log] [HMR] connected
 ```
