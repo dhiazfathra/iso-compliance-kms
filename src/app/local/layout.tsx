@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function LocalLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${mono.variable}`}>
+    <html lang="en" className={`${inter.variable} ${mono.variable}`} suppressHydrationWarning>
       <body>
         <LocalShell>{children}</LocalShell>
       </body>

@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: 'Sign in · Dermaster ISMS' }
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${mono.variable}`}>
+    <html lang="en" className={`${inter.variable} ${mono.variable}`} suppressHydrationWarning>
       <body>{children}</body>
     </html>
   )

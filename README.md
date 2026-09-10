@@ -256,3 +256,10 @@ trip, not query count.
 - The PDF is single-column text in Helvetica and Courier, wrapped on average
   glyph width, and holds no images or clickable links. It is the document text
   an auditor reads, not a typeset publication (ADR-0016).
+- The three root layouts carry `suppressHydrationWarning` on `<html>`, because
+  extensions such as Google Analytics Opt-out stamp attributes onto the
+  document before React hydrates and every page load then logged a mismatch the
+  app could not fix. React does not inherit the flag, so mismatches on `<body>`
+  and below still warn — proved by a negative control in
+  `docs/evidence/0002-root-hydration-suppression`. Do not widen it past
+  `<html>`; that would silence real bugs.
