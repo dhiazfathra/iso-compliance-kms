@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { placeholderFile } from '../src/seed/placeholder'
+import { buildSeedData } from '../src/seed/build'
 import { unzip, zip } from '../src/lib/zip'
 
 describe('zip', () => {
@@ -142,5 +143,42 @@ describe('unzip', () => {
 
   test('refuses something that is not an archive', async () => {
     await expect(unzip(new TextEncoder().encode('not a zip at all'))).rejects.toThrow('Not a ZIP')
+  })
+})
+
+describe('the files the seed actually writes', () => {
+  const data = buildSeedData({
+    today: new Date('2026-09-10T00:00:00.000Z'),
+    adminEmail: 'admin@dermaster.local',
+    auditorEmail: 'auditor@dermaster.local',
+    auditorSessionHours: 8,
+  })
+  const files = data.evidence.map((e) => ({ e, f: placeholderFile(e.title, e.fileType, e.body) }))
+
+  test('no record is filed as an empty stub', () => {
+    for (const { e, f } of files) {
+      expect(e.body?.trim().length ?? 0).toBeGreaterThan(0)
+      expect(f.data.toString('latin1')).not.toContain('Placeholder for')
+      // A one-pixel image or a one-line note is not a record an auditor can
+      // read. The Markdown logs are the smallest honest thing the seed files.
+      expect(f.size).toBeGreaterThan(600)
+    }
+  })
+
+  test('every declared format is a genuinely valid file of that format', () => {
+    for (const { e, f } of files) {
+      expect(e.title.split('.').pop()!.toLowerCase()).toBe(e.fileType.toLowerCase())
+      if (e.fileType === 'PDF') expect(f.data.subarray(0, 5).toString()).toBe('%PDF-')
+      else if (e.fileType === 'MD') expect(f.mimetype).toBe('text/markdown')
+      else expect(f.data.readUInt32LE(0)).toBe(0x04034b50)
+    }
+  })
+
+  test('every policy and form has an owner and text behind it', () => {
+    for (const p of data.policies) expect(p.body.trim().length).toBeGreaterThan(400)
+    for (const f of data.forms) {
+      expect(f.name.trim().length).toBeGreaterThan(3)
+      expect(data.evidence.some((e) => e.form === f.code)).toBe(true)
+    }
   })
 })

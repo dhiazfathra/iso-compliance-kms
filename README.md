@@ -104,7 +104,13 @@ Nothing is uploaded and no account is involved. Every screen the hosted app has
 is there under `/local`, rendered from the same components: editing a document
 body, filing a new evidence version and generating an audit pack all run
 client-side, and the edit is written back to the stored pack so it survives a
-reload. **Export as zip** on the import screen hands the pack back out, in the
+reload. The importer takes the folder as a picker reports it or the archive as a zip
+tool wrote it: operating-system junk (`.DS_Store`, `Thumbs.db`, `__MACOSX`) is
+dropped, backslash separators are normalised, and the pack is rooted at the
+shallowest `graph.json` so a pack carrying an earlier export inside `evidence/`
+is not read from the wrong place.
+
+**Export as zip** on the import screen hands the pack back out, in the
 same format the exporter and the hosted audit pack produce — one format in,
 one format out.
 
@@ -210,7 +216,7 @@ trip, not query count.
 ## Known limits
 
 - Pack building holds every evidence file in memory in one function
-  invocation. Fine at this size (202 files, a few MB zipped); a repository with
+  invocation. Fine at this size (288 files, a few MB zipped); a repository with
   gigabytes of evidence needs streaming or a queue (ADR-0012).
 - The readiness weighting (compliant 1, needs review 0.75, in progress 0.5, gap 0) is a stated assumption, not a customer-supplied formula.
 - Referenced-only clause stubs exist so cross-map links resolve; they carry
@@ -222,7 +228,13 @@ trip, not query count.
   with their own cross references, revision history and evidence (ADR-0017).
   They are specific to PT Cakrawala Bumi Estetika and must be replaced by any
   other organisation reusing this seed.
-- Every one of the 143 catalogue requirements now has a written controlled
+- The catalogue is the complete reference for both standards: ISO/IEC
+  27001:2022 carries its 93 Annex A controls **and** management-system clauses
+  4 to 10, and ISO 9001:2015 carries clauses 4 to 10 down to the sub-clause a
+  finding is actually raised against. Both standards number their clauses 4 to
+  10, so the ISMS's numbered clauses are namespaced (`27001 9.2`) the way cross
+  references already were; ISO 9001 9.2 keeps the bare number.
+- Every one of the 205 catalogue requirements now has a written controlled
   document rather than text derived from its title, and a test fails the build
   if one goes missing or shrinks to a stub. They were drafted for this
   repository, not supplied by a certification body: they are a credible
