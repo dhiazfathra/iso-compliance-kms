@@ -1,12 +1,13 @@
 import { describe, expect, test } from 'bun:test'
 import { DOCUMENTS } from '../src/seed/documents'
 import { coverageFor } from '../src/seed/coverage'
-import { CATALOG } from '../src/seed/iso-catalog'
+import { CATALOG, catalogKey } from '../src/seed/iso-catalog'
 import { CL } from '../src/seed/mockup-data'
 
 /** Every requirement the seed can link to: the catalogue plus the tracked rows. */
 const KNOWN = new Set([
   ...CATALOG.map((c) => c.id),
+  ...CATALOG.map((c) => catalogKey(c.id, c.standard)),
   ...CATALOG.map((c) => `${c.standard} ${c.id}`),
   ...CL.map((c) => c.id),
 ])
@@ -48,7 +49,9 @@ describe('controlled documents', () => {
     // outside the catalogue. A stub inside it would silently pass for a
     // requirement an auditor will ask about by name, so the gate is here.
     const documented = new Set(DOCUMENTS.map((d) => d.clause))
-    const missing = CATALOG.filter((c) => !documented.has(c.id)).map((c) => c.id)
+    const missing = CATALOG.map((c) => catalogKey(c.id, c.standard)).filter(
+      (id) => !documented.has(id),
+    )
     expect(missing).toEqual([])
   })
 

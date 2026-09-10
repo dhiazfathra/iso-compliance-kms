@@ -12,7 +12,7 @@
  * `today` and testable without a database.
  */
 import { ACTIVITY, CL, PVERS, ROLES, VERS } from './mockup-data'
-import { CATALOG, type CatalogEntry } from './iso-catalog'
+import { CATALOG, catalogKey, type CatalogEntry } from './iso-catalog'
 import { coverageFor, policyBody, recordBody } from './coverage'
 import { DOCUMENTS } from './documents'
 
@@ -195,8 +195,12 @@ export function buildSeedData(options: BuildOptions): SeedData {
   // same number. The tracked row keeps the bare number; the catalogue entry from
   // the other standard is namespaced the way cross references already are
   // ("9001 9.2"), so both exist and both resolve. See ADR-0011.
+  // A bare number is the QMS's; the ISMS's own clauses 4-10 carry the same
+  // numbers as ISO 9001's, so they are always namespaced.
   const trackedStandard = new Map(CL.map((c) => [c.id, c.std as Standard]))
   const key = (id: string, std: Standard) => {
+    const namespaced = catalogKey(id, std)
+    if (namespaced !== id) return namespaced
     const clash = trackedStandard.get(id)
     return clash && clash !== std ? `${std} ${id}` : id
   }
