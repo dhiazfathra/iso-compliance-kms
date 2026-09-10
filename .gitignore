@@ -78,3 +78,12 @@ graphify-out/
 compliance-pack.zip
 Archive.zip
 .claude/.headroom_wrap_settings.lock
+
+# local agent/editor state — regenerated per session, never part of a change
+.serena/
+.procoder/state/
+.tokensave
+.claude/helpers/
+.claude/security-scans/
+.claude/settings.local.json
+.claude/.headroom_wrap_owners.json
