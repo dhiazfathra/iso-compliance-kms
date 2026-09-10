@@ -45,5 +45,9 @@
   },
   "trustedDependencies": [
     "unrs-resolver"
-  ]
+  ],
+  "overrides": {
+    "dompurify": "^3.4.13",
+    "esbuild": ">=0.25.12"
+  }
 }
