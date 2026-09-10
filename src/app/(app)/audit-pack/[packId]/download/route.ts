@@ -3,6 +3,7 @@ import config from '@payload-config'
 import { NextResponse } from 'next/server'
 import { sessionState } from '@/lib/auth'
 import { recordDownload } from '@/lib/audit-session'
+import { safeFilename } from '@/lib/inline-safe'
 
 /**
  * Packs are served the way evidence is (ADR-0010): through the app, with the
@@ -38,7 +39,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ packId: 
   return new NextResponse(upstream.body, {
     headers: {
       'Content-Type': 'application/zip',
-      'Content-Disposition': `attachment; filename="${packId}.zip"`,
+      // The name comes from the stored record, not the URL, and is stripped of
+      // anything that could forge a second header parameter.
+      'Content-Disposition': `attachment; filename="${safeFilename(pack.packId)}.zip"`,
       'Cache-Control': 'private, no-store',
     },
   })

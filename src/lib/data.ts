@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { cache } from 'react'
 import { requireUser } from './auth'
+import { groupBy } from './graph'
 
 export * from './graph'
 
@@ -91,11 +92,25 @@ const clauseCode = (v: unknown): string =>
   v && typeof v === 'object' ? ((v as { clauseId: string }).clauseId ?? '') : String(v ?? '')
 
 /**
+ * How much of the activity log a screen is given. The log only grows, and no
+ * screen shows more than the most recent entries; reading it unbounded would
+ * make every page render slower every day the ISMS is used.
+ */
+export const ACTIVITY_WINDOW = 100
+
+/**
  * One read of the whole compliance graph. The dataset is a few hundred rows, so
  * assembling the hierarchy in memory beats N nested queries per screen — and it
  * gives every screen the same cross-mapping view.
+ *
+ * `withBodies` is off by default, and that default matters. Controlled document
+ * text is close to a megabyte across the register; two screens read it and the
+ * rest do not, but it rode along in every whole-graph load — out of the
+ * database, and then over the wire into the client component that renders the
+ * clause tree, which never looks at it. Only the pack build, which writes every
+ * document to disk, asks for it.
  */
-export const loadGraph = cache(async (): Promise<Graph> => {
+const readGraph = async (withBodies: boolean): Promise<Graph> => {
   const user = await requireUser()
   const payload = await getPayload({ config })
   // The signed-in user is passed through so every read is checked by the
@@ -105,11 +120,25 @@ export const loadGraph = cache(async (): Promise<Graph> => {
   const [users, clauses, policies, forms, evidence, gaps, activity] = await Promise.all([
     payload.find({ collection: 'users', ...opts }),
     payload.find({ collection: 'clauses', sort: 'clauseId', ...opts }),
-    payload.find({ collection: 'policies', sort: 'name', ...opts }),
+    payload.find({
+      collection: 'policies',
+      sort: 'name',
+      ...opts,
+      // Cast: an exclusion `select` narrows Payload's return type to omit the
+      // field, but the field is optional on `PolicyNode` and the mapping below
+      // is shared by both modes. The runtime shape is what changes here.
+      ...(withBodies ? {} : { select: { body: false } as never }),
+    }),
     payload.find({ collection: 'forms', sort: 'code', ...opts }),
     payload.find({ collection: 'evidence', sort: '-uploadedAt', ...opts }),
     payload.find({ collection: 'gaps', sort: 'due', ...opts }),
-    payload.find({ collection: 'activity', sort: '-at', ...opts }),
+    payload.find({
+      collection: 'activity',
+      sort: '-at',
+      ...opts,
+      pagination: true,
+      limit: ACTIVITY_WINDOW,
+    }),
   ])
 
   const evidenceItems: EvidenceItem[] = evidence.docs.map((e) => ({
@@ -135,6 +164,7 @@ export const loadGraph = cache(async (): Promise<Graph> => {
     })),
   }))
 
+  const evidenceByForm = groupBy(evidenceItems, (e) => e.form)
   const formNodes: FormNode[] = forms.docs.map((f) => ({
     id: f.id,
     code: f.code,
@@ -143,9 +173,10 @@ export const loadGraph = cache(async (): Promise<Graph> => {
     primaryClause: clauseCode(f.primaryClause),
     alsoSatisfies: (f.alsoSatisfies ?? []).map(clauseCode),
     externalRefs: (f.externalRefs ?? []).map((x) => x.ref),
-    evidence: evidenceItems.filter((e) => e.form === f.id),
+    evidence: evidenceByForm.get(f.id) ?? [],
   }))
 
+  const formsByPolicy = groupBy(formNodes, (f) => f.policy)
   const policyNodes: PolicyNode[] = policies.docs.map((p) => ({
     id: p.id,
     name: p.name,
@@ -163,9 +194,10 @@ export const loadGraph = cache(async (): Promise<Graph> => {
       status: r.status,
       note: r.note,
     })),
-    forms: formNodes.filter((f) => f.policy === p.id),
+    forms: formsByPolicy.get(p.id) ?? [],
   }))
 
+  const policiesByClause = groupBy(policyNodes, (p) => p.primaryClause)
   const clauseNodes: ClauseNode[] = clauses.docs.map((c) => ({
     id: c.id,
     clauseId: c.clauseId,
@@ -175,7 +207,7 @@ export const loadGraph = cache(async (): Promise<Graph> => {
     owner: rel<User>(c.owner) ?? { id: 0, name: '—', role: '' },
     nextReview: c.nextReview,
     criticality: c.criticality,
-    policies: policyNodes.filter((p) => p.primaryClause === c.clauseId),
+    policies: policiesByClause.get(c.clauseId) ?? [],
   }))
 
   return {
@@ -202,4 +234,25 @@ export const loadGraph = cache(async (): Promise<Graph> => {
       ref: a.ref,
     })),
   }
+}
+
+/** The graph every screen reads: no controlled document text. */
+export const loadGraph = cache(() => readGraph(false))
+
+/** The graph the pack build reads, which writes every document out as a file. */
+export const loadGraphWithBodies = cache(() => readGraph(true))
+
+/** One controlled document's text, for the single screen that renders it. */
+export const loadPolicyBody = cache(async (id: number): Promise<string> => {
+  const user = await requireUser()
+  const payload = await getPayload({ config })
+  const policy = (await payload.findByID({
+    collection: 'policies',
+    id,
+    depth: 0,
+    overrideAccess: false,
+    user,
+    select: { body: true },
+  })) as { body?: string | null } | null
+  return policy?.body ?? ''
 })

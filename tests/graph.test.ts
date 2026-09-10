@@ -1,6 +1,7 @@
-import { describe, expect, test } from 'bun:test'
+import { describe, expect, it, test } from 'bun:test'
 import {
   crossMapMatrix,
+  groupBy,
   crossMapOf,
   evidenceCount,
   expiryHorizon,
@@ -413,5 +414,33 @@ describe('openChainKeys', () => {
 
   test('leaves a long unsearched list collapsed', () => {
     expect(openChainKeys([clause(), clause(), clause(), clause()], false)).toEqual([])
+  })
+})
+
+describe('groupBy', () => {
+  it('buckets every item under its key, in encounter order', () => {
+    const rows = [
+      { id: 1, form: 'A' },
+      { id: 2, form: 'B' },
+      { id: 3, form: 'A' },
+    ]
+    const grouped = groupBy(rows, (r) => r.form)
+    expect([...grouped.keys()]).toEqual(['A', 'B'])
+    expect(grouped.get('A')?.map((r) => r.id)).toEqual([1, 3])
+    expect(grouped.get('B')?.map((r) => r.id)).toEqual([2])
+  })
+
+  it('has no bucket for a key nothing was filed under', () => {
+    expect(groupBy([{ k: 1 }], (r) => r.k).get(2)).toBeUndefined()
+    expect(groupBy([] as { k: number }[], (r) => r.k).size).toBe(0)
+  })
+
+  it('does the work in one pass rather than one scan per key', () => {
+    // 2,000 rows over 500 keys: quadratic grouping is ~1e6 comparisons, this
+    // is 2,000. The assertion is on the result; the point is that it returns.
+    const rows = Array.from({ length: 2000 }, (_, i) => ({ i, k: i % 500 }))
+    const grouped = groupBy(rows, (r) => r.k)
+    expect(grouped.size).toBe(500)
+    expect(grouped.get(0)).toHaveLength(4)
   })
 })

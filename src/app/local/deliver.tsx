@@ -10,6 +10,7 @@
  * asks) or saved straight away.
  */
 import { useEffect, useMemo } from 'react'
+import { canRenderInline, inlineContentType } from '@/lib/inline-safe'
 
 export function Deliver({
   bytes,
@@ -22,22 +23,30 @@ export function Deliver({
   type: string
   inline: boolean
 }) {
+  // A blob: URL runs on this origin, so local mode enforces the same list the
+  // hosted route does. There is no server here to do it for us.
+  const renderable = inline && canRenderInline(type)
+  // A blob carries its own Content-Type, so this is where local mode says what
+  // the browser is allowed to make of the bytes — the hosted route's response
+  // header, with no response. Markdown must land as plain text here for the
+  // same reason it does there; a file being saved keeps its real type.
+  const blobType = renderable ? inlineContentType(type) : type
   const url = useMemo(() => {
-    const blob = new Blob([bytes as BlobPart], { type })
+    const blob = new Blob([bytes as BlobPart], { type: blobType })
     return URL.createObjectURL(blob)
-  }, [bytes, type])
+  }, [bytes, blobType])
 
   useEffect(() => () => URL.revokeObjectURL(url), [url])
 
   useEffect(() => {
-    if (inline) return
+    if (renderable) return
     const a = document.createElement('a')
     a.href = url
     a.download = filename
     a.click()
-  }, [url, filename, inline])
+  }, [url, filename, renderable])
 
-  if (inline)
+  if (renderable)
     return (
       <iframe
         src={url}
