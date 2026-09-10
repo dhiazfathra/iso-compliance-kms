@@ -79,3 +79,5 @@ compliance-pack.zip
 Archive.zip
 .claude/.headroom_wrap_settings.lock
 .claude/security-scans/
+.claude/helpers/
+.claude/.headroom_wrap_owners.json

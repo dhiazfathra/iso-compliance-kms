@@ -5,6 +5,9 @@ import { STATUS_META, dueColor, expiresIn, fmtDate, type StatusKey } from '@/lib
 import { CrossMapChips } from '@/components/Badges'
 import type { ViewProps } from './types'
 
+/** Kind, document, cross-map, date — one track each, so the chain reads as a table. */
+const CHAIN_COLS = '68px minmax(0,1fr) 132px 74px'
+
 /** The banner's slice of the audit session; `null` outside a live session. */
 export type SessionBanner = {
   sessionId: string
@@ -139,30 +142,34 @@ export function AuditSessionView({
           <div className="section-head">
             <span className="eyebrow">Chain of evidence</span>
           </div>
+          <div className="grid-head" style={{ gridTemplateColumns: CHAIN_COLS, padding: '10px 0' }}>
+            <span>Kind</span>
+            <span>Document</span>
+            <span>Also satisfies</span>
+            <span style={{ textAlign: 'right' }}>Date</span>
+          </div>
           {chain.map((c, i) => (
             <div
               key={`${c.kind}-${c.name}-${i}`}
               className="row responsive-grid"
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'minmax(0,1fr) 180px 96px',
-                gap: 16,
-                alignItems: 'center',
+                gridTemplateColumns: CHAIN_COLS,
+                gap: 18,
+                alignItems: 'baseline',
                 padding: '12px 0',
               }}
             >
-              <span style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0 }}>
-                <span className="eyebrow" style={{ fontSize: 9.5, flex: 'none' }}>
-                  {c.kind}
-                </span>
-                {c.href ? (
-                  <Link href={c.href} style={{ fontSize: 13, color: 'var(--ink)' }}>
-                    {c.name}
-                  </Link>
-                ) : (
-                  <span style={{ fontSize: 13 }}>{c.name}</span>
-                )}
+              <span className="eyebrow" style={{ fontSize: 9.5 }}>
+                {c.kind}
               </span>
+              {c.href ? (
+                <Link href={c.href} style={{ fontSize: 13, color: 'var(--ink)' }}>
+                  {c.name}
+                </Link>
+              ) : (
+                <span style={{ fontSize: 13 }}>{c.name}</span>
+              )}
               <span style={{ overflow: 'hidden' }}>
                 <CrossMapChips refs={c.cross} max={2} base={base} />
               </span>

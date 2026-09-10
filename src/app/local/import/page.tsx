@@ -19,18 +19,32 @@ import { useLocalPack } from '../provider'
 const bytesOf = async (file: File) => new Uint8Array(await file.arrayBuffer())
 
 /** Folder pickers report `compliance-pack/graph.json`; a zip may too. */
-async function readSelection(files: FileList): Promise<PackFile[]> {
+export async function readSelection(files: FileList): Promise<PackFile[]> {
+  // Folder pickers hand back every file in the tree, including the junk the
+  // operating system leaves there. None of it is a pack file and `.DS_Store`
+  // inside `evidence/` would otherwise be offered as a record.
+  const junk = (path: string) =>
+    path.split('/').some((p) => p === '.DS_Store' || p === 'Thumbs.db' || p === '__MACOSX')
+
   const picked = [...files]
-  const single = picked.length === 1 && /\.zip$/i.test(picked[0]!.name)
-  if (single) return (await unzip(await bytesOf(picked[0]!))).map((e) => ({ ...e }))
-  return Promise.all(
+  // A zip may be picked on its own, or be the only real file in a folder the
+  // user pointed at; both mean "read the archive".
+  const archives = picked.filter((f) => /\.zip$/i.test(f.name))
+  if (archives.length === 1 && picked.every((f) => f === archives[0] || junk(f.name)))
+    return (await unzip(await bytesOf(archives[0]!))).filter((e) => !junk(e.path))
+
+  const read = await Promise.all(
     picked.map(async (f) => ({
       // `webkitRelativePath` is the path inside the chosen folder; plain file
       // pickers leave it empty.
-      path: (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name,
+      path: ((f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name).replace(
+        /\\/g,
+        '/',
+      ),
       bytes: await bytesOf(f),
     })),
   )
+  return read.filter((f) => !junk(f.path))
 }
 
 export default function ImportPage() {

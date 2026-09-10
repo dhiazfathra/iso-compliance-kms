@@ -303,8 +303,17 @@ export function safePath(path: string): string | undefined {
  * agree on where the pack actually starts, so they ask here.
  */
 export function packPrefix(input: PackFile[]): string {
-  const manifest = input.find((f) => f.path === 'graph.json' || f.path.endsWith('/graph.json'))
-  return manifest ? manifest.path.slice(0, manifest.path.length - 'graph.json'.length) : ''
+  // The shallowest manifest wins. A pack carries evidence files that were
+  // themselves exported registers, so `graph.json` can appear more than once;
+  // taking whichever came first in the archive would root the pack inside its
+  // own evidence folder and lose every file above it.
+  let prefix: string | undefined
+  for (const f of input) {
+    if (f.path !== 'graph.json' && !f.path.endsWith('/graph.json')) continue
+    const candidate = f.path.slice(0, f.path.length - 'graph.json'.length)
+    if (prefix === undefined || candidate.length < prefix.length) prefix = candidate
+  }
+  return prefix ?? ''
 }
 
 /**

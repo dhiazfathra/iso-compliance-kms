@@ -111,8 +111,8 @@ export function coverageFor(entry: CatalogEntry, index: number, today: Date): Co
       ],
     },
     form: {
-      code: `FRM-${c}-01`,
-      name: `${entry.title} — control record`,
+      code: `FRM-${p}-${c}-01`,
+      name: `${entry.title} — ${p} control record`,
     },
     evidence: {
       title: `${p}-${c}-record-${iso(uploaded)}.${FILE_TYPES[index % FILE_TYPES.length].toLowerCase()}`,
@@ -121,7 +121,7 @@ export function coverageFor(entry: CatalogEntry, index: number, today: Date): Co
       expiryDate: iso(expiry),
       body: recordBody({
         entry,
-        formCode: `FRM-${c}-01`,
+        formCode: `FRM-${p}-${c}-01`,
         owner,
         performed: iso(uploaded),
         next: iso(nextReview),

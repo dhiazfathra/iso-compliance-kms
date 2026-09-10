@@ -10,6 +10,16 @@
  */
 export type CatalogEntry = { id: string; title: string; standard: '27001' | '9001' }
 
+/**
+ * The register-wide reference for a catalogue entry. Clause numbers repeat
+ * across the two standards — ISO 9001 9.2 and ISO 27001 9.2 are both "internal
+ * audit" but are separate requirements — so the ISMS's numbered clauses carry
+ * the `27001 ` prefix cross references already use. Annex A controls and the
+ * QMS's clauses keep their bare number.
+ */
+export const catalogKey = (id: string, standard: CatalogEntry['standard']) =>
+  standard === '27001' && !id.startsWith('A.') ? `27001 ${id}` : id
+
 const A5: [string, string][] = [
   ['A.5.1', 'Policies for information security'],
   ['A.5.2', 'Information security roles and responsibilities'],
@@ -115,20 +125,40 @@ const A8: [string, string][] = [
   ['A.8.34', 'Protection of information systems during audit testing'],
 ]
 
-/** ISO 9001:2015 clauses 4 to 10 — the auditable ones; 1 to 3 are scope, refs and terms. */
+/**
+ * ISO 9001:2015 clauses 4 to 10 — the auditable ones; 1 to 3 are scope,
+ * normative references and terms. Sub-clauses are listed as the standard
+ * numbers them, so a finding can be raised against the exact requirement.
+ */
 const Q: [string, string][] = [
   ['4.1', 'Understanding the organization and its context'],
   ['4.2', 'Understanding the needs and expectations of interested parties'],
   ['4.3', 'Determining the scope of the quality management system'],
   ['4.4', 'Quality management system and its processes'],
+  ['4.4.1', 'Establishing the processes needed for the quality management system'],
+  ['4.4.2', 'Documented information supporting the operation of processes'],
   ['5.1', 'Leadership and commitment'],
+  ['5.1.1', 'Leadership and commitment — general'],
+  ['5.1.2', 'Customer focus'],
   ['5.2', 'Policy'],
+  ['5.2.1', 'Establishing the quality policy'],
+  ['5.2.2', 'Communicating the quality policy'],
   ['5.3', 'Organizational roles, responsibilities and authorities'],
   ['6.1', 'Actions to address risks and opportunities'],
+  ['6.1.1', 'Determining risks and opportunities'],
+  ['6.1.2', 'Planning actions to address risks and opportunities'],
   ['6.2', 'Quality objectives and planning to achieve them'],
+  ['6.2.1', 'Establishing the quality objectives'],
+  ['6.2.2', 'Planning how to achieve the quality objectives'],
   ['6.3', 'Planning of changes'],
   ['7.1', 'Resources'],
+  ['7.1.1', 'Resources — general'],
+  ['7.1.2', 'People'],
+  ['7.1.3', 'Infrastructure'],
+  ['7.1.4', 'Environment for the operation of processes'],
   ['7.1.5', 'Monitoring and measuring resources'],
+  ['7.1.5.1', 'Monitoring and measuring resources — general'],
+  ['7.1.5.2', 'Measurement traceability'],
   ['7.1.6', 'Organizational knowledge'],
   ['7.2', 'Competence'],
   ['7.3', 'Awareness'],
@@ -137,9 +167,21 @@ const Q: [string, string][] = [
   ['7.5.1', 'Documented information — general'],
   ['7.5.2', 'Creating and updating documented information'],
   ['7.5.3', 'Control of documented information'],
+  ['7.5.3.1', 'Availability and protection of documented information'],
+  ['7.5.3.2', 'Control of documented information of external origin'],
   ['8.1', 'Operational planning and control'],
   ['8.2', 'Requirements for products and services'],
+  ['8.2.1', 'Customer communication'],
+  ['8.2.2', 'Determining the requirements for products and services'],
+  ['8.2.3', 'Review of the requirements for products and services'],
+  ['8.2.4', 'Changes to requirements for products and services'],
   ['8.3', 'Design and development of products and services'],
+  ['8.3.1', 'Design and development — general'],
+  ['8.3.2', 'Design and development planning'],
+  ['8.3.3', 'Design and development inputs'],
+  ['8.3.4', 'Design and development controls'],
+  ['8.3.5', 'Design and development outputs'],
+  ['8.3.6', 'Design and development changes'],
   ['8.4', 'Control of externally provided processes, products and services'],
   ['8.4.1', 'External providers — general'],
   ['8.4.2', 'Type and extent of control of external provision'],
@@ -169,6 +211,49 @@ const Q: [string, string][] = [
   ['10.3', 'Continual improvement'],
 ]
 
+/**
+ * ISO/IEC 27001:2022 clauses 4 to 10 — the management-system requirements an
+ * auditor certifies against. Annex A above is the control set they select
+ * from; a certificate is granted against these clauses, so the register would
+ * be incomplete without them.
+ */
+const S: [string, string][] = [
+  ['4.1', 'Understanding the organization and its context'],
+  ['4.2', 'Understanding the needs and expectations of interested parties'],
+  ['4.3', 'Determining the scope of the information security management system'],
+  ['4.4', 'Information security management system'],
+  ['5.1', 'Leadership and commitment'],
+  ['5.2', 'Information security policy'],
+  ['5.3', 'Organizational roles, responsibilities and authorities'],
+  ['6.1', 'Actions to address risks and opportunities'],
+  ['6.1.1', 'Actions to address risks and opportunities — general'],
+  ['6.1.2', 'Information security risk assessment'],
+  ['6.1.3', 'Information security risk treatment'],
+  ['6.2', 'Information security objectives and planning to achieve them'],
+  ['6.3', 'Planning of changes'],
+  ['7.1', 'Resources'],
+  ['7.2', 'Competence'],
+  ['7.3', 'Awareness'],
+  ['7.4', 'Communication'],
+  ['7.5', 'Documented information'],
+  ['7.5.1', 'Documented information — general'],
+  ['7.5.2', 'Creating and updating documented information'],
+  ['7.5.3', 'Control of documented information'],
+  ['8.1', 'Operational planning and control'],
+  ['8.2', 'Information security risk assessment — operation'],
+  ['8.3', 'Information security risk treatment — operation'],
+  ['9.1', 'Monitoring, measurement, analysis and evaluation'],
+  ['9.2', 'Internal audit'],
+  ['9.2.1', 'Internal audit — general'],
+  ['9.2.2', 'Internal audit programme'],
+  ['9.3', 'Management review'],
+  ['9.3.1', 'Management review — general'],
+  ['9.3.2', 'Management review inputs'],
+  ['9.3.3', 'Management review results'],
+  ['10.1', 'Continual improvement'],
+  ['10.2', 'Nonconformity and corrective action'],
+]
+
 export const CATALOG: CatalogEntry[] = [
   ...[...A5, ...A6, ...A7, ...A8].map(([id, title]) => ({
     id,
@@ -176,4 +261,5 @@ export const CATALOG: CatalogEntry[] = [
     standard: '27001' as const,
   })),
   ...Q.map(([id, title]) => ({ id, title, standard: '9001' as const })),
+  ...S.map(([id, title]) => ({ id, title, standard: '27001' as const })),
 ]

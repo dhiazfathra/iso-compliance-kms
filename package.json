@@ -47,7 +47,8 @@
     "unrs-resolver"
   ],
   "overrides": {
-    "dompurify": "^3.4.14"
+    "dompurify": "^3.4.14",
+    "esbuild": ">=0.25.12"
   },
   "resolutions": {
     "dompurify": "^3.4.14"

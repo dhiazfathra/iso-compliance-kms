@@ -20,6 +20,11 @@ import { QMS_OPERATION_A } from './qms-operation-a'
 import { QMS_OPERATION_B } from './qms-operation-b'
 import { QMS_EVALUATION_IMPROVEMENT_1 } from './qms-evaluation-improvement-1'
 import { QMS_EVALUATION_IMPROVEMENT_2 } from './qms-evaluation-improvement-2'
+import { QMS_SUBCLAUSES_4_7 } from './qms-subclauses-4-7'
+import { QMS_SUBCLAUSES_8 } from './qms-subclauses-8'
+import { ISMS_CLAUSES_8_10 } from './isms-clauses-8-10'
+import { ISMS_CLAUSES_6_7 } from './isms-clauses-6-7'
+import { ISMS_CLAUSES_4_5 } from './isms-clauses-4-5'
 
 export type { SeedDocument, SeedEvidence, SeedRevision, DocFormat } from './types'
 
@@ -46,4 +51,9 @@ export const DOCUMENTS: SeedDocument[] = [
   ...QMS_OPERATION_B,
   ...QMS_EVALUATION_IMPROVEMENT_1,
   ...QMS_EVALUATION_IMPROVEMENT_2,
+  ...QMS_SUBCLAUSES_4_7,
+  ...QMS_SUBCLAUSES_8,
+  ...ISMS_CLAUSES_4_5,
+  ...ISMS_CLAUSES_6_7,
+  ...ISMS_CLAUSES_8_10,
 ]
